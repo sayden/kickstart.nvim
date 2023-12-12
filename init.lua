@@ -1,46 +1,4 @@
---[[
-
-=====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
-=====================================================================
-
-Kickstart.nvim is *not* a distribution.
-
-Kickstart.nvim is a template for your own configuration.
-  The goal is that you can read every line of code, top-to-bottom, understand
-  what your configuration is doing, and modify it to suit your needs.
-
-  Once you've done that, you should start exploring, configuring and tinkering to
-  explore Neovim!
-
-  If you don't know anything about Lua, I recommend taking some time to read through
-  a guide. One possible example:
-  - https://learnxinyminutes.com/docs/lua/
-
-
-  And then you can explore or search through `:help lua-guide`
-  - https://neovim.io/doc/user/lua-guide.html
-
-
-Kickstart Guide:
-
-I have left several `:help X` comments throughout the init.lua
-You should run that command and read that help section for more information.
-
-In addition, I have some `NOTE:` items throughout the file.
-These are for you, the reader to help understand what is happening. Feel free to delete
-them once you know what you're doing, but they should serve as a guide for when you
-are first encountering a few different constructs in your nvim config.
-
-I hope you enjoy your Neovim journey,
-- TJ
-
-P.S. You can delete this when you're done too. It's your config now :)
---]]
-
--- Set <space> as the leader key
--- See `:help mapleader`
---  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
+--Set <space> as the leader key
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
@@ -69,12 +27,27 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: First, some plugins that don't require any configuration
 
+  -- [mario] add packer which seems like the only way to install some stuff
+  'wbthomason/packer.nvim',
+
   -- Git related plugins
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
 
+  -- [mario] Zig dude, zig
+  'ziglang/zig.vim',
+
+  -- [mario] I think I needed this to install zig
+  {
+    'neoclide/coc.nvim',
+    branch = 'release'
+  },
+
   -- Detect tabstop and shiftwidth automatically
   'tpope/vim-sleuth',
+
+  -- [mario] Sidebar, still don't know about this one
+  'sidebar-nvim/sidebar.nvim',
 
   -- NOTE: This is where your plugins related to LSP can be installed.
   --  The configuration is done below. Search for lspconfig to find it below.
@@ -94,6 +67,21 @@ require('lazy').setup({
       'folke/neodev.nvim',
     },
   },
+  -- [mario] Golang stuff
+  {
+    "ray-x/go.nvim",
+    dependencies = { -- optional packages
+      "ray-x/guihua.lua",
+      "neovim/nvim-lspconfig",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      require("go").setup()
+    end,
+    event = { "CmdlineEnter" },
+    ft = { "go", 'gomod' },
+    build = ':lua require("go.install").update_all_sync()' -- if you need to install/update all binaries
+  },
 
   {
     -- Autocompletion
@@ -106,6 +94,10 @@ require('lazy').setup({
       -- Adds LSP completion capabilities
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+
+      -- [mario] Why I installed this? no idea
+      'hrsh7th/vim-vsnip',
+      'neoclide/coc.nvim',
 
       -- Adds a number of user-friendly snippets
       'rafamadriz/friendly-snippets',
@@ -158,44 +150,45 @@ require('lazy').setup({
 
         -- Actions
         -- visual mode
-        map('v', '<leader>hs', function()
-          gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'stage git hunk' })
-        map('v', '<leader>hr', function()
-          gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'reset git hunk' })
-        -- normal mode
-        map('n', '<leader>hs', gs.stage_hunk, { desc = 'git stage hunk' })
-        map('n', '<leader>hr', gs.reset_hunk, { desc = 'git reset hunk' })
-        map('n', '<leader>hS', gs.stage_buffer, { desc = 'git Stage buffer' })
-        map('n', '<leader>hu', gs.undo_stage_hunk, { desc = 'undo stage hunk' })
-        map('n', '<leader>hR', gs.reset_buffer, { desc = 'git Reset buffer' })
-        map('n', '<leader>hp', gs.preview_hunk, { desc = 'preview git hunk' })
-        map('n', '<leader>hb', function()
-          gs.blame_line { full = false }
-        end, { desc = 'git blame line' })
-        map('n', '<leader>hd', gs.diffthis, { desc = 'git diff against index' })
-        map('n', '<leader>hD', function()
-          gs.diffthis '~'
-        end, { desc = 'git diff against last commit' })
-
-        -- Toggles
-        map('n', '<leader>tb', gs.toggle_current_line_blame, { desc = 'toggle git blame line' })
-        map('n', '<leader>td', gs.toggle_deleted, { desc = 'toggle git show deleted' })
-
-        -- Text object
-        map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { desc = 'select git hunk' })
+        -- map('v', '<leader>hs', function()
+        --   gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
+        -- end, { desc = 'stage git hunk' })
+        -- map('v', '<leader>hr', function()
+        --   gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
+        -- end, { desc = 'reset git hunk' })
+        -- -- normal mode
+        -- map('n', '<leader>hs', gs.stage_hunk, { desc = 'git stage hunk' })
+        -- map('n', '<leader>hr', gs.reset_hunk, { desc = 'git reset hunk' })
+        -- map('n', '<leader>hS', gs.stage_buffer, { desc = 'git Stage buffer' })
+        -- map('n', '<leader>hu', gs.undo_stage_hunk, { desc = 'undo stage hunk' })
+        -- map('n', '<leader>hR', gs.reset_buffer, { desc = 'git Reset buffer' })
+        -- map('n', '<leader>hp', gs.preview_hunk, { desc = 'preview git hunk' })
+        -- map('n', '<leader>hb', function()
+        --   gs.blame_line { full = false }
+        -- end, { desc = 'git blame line' })
+        -- map('n', '<leader>hd', gs.diffthis, { desc = 'git diff against index' })
+        -- map('n', '<leader>hD', function()
+        --   gs.diffthis '~'
+        -- end, { desc = 'git diff against last commit' })
+        --
+        -- -- Toggles
+        -- map('n', '<leader>tb', gs.toggle_current_line_blame, { desc = 'toggle git blame line' })
+        -- map('n', '<leader>td', gs.toggle_deleted, { desc = 'toggle git show deleted' })
+        --
+        -- -- Text object
+        -- map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { desc = 'select git hunk' })
       end,
     },
   },
 
   {
-    -- Theme inspired by Atom
-    'navarasu/onedark.nvim',
-    priority = 1000,
+    -- [mario] Themes
+    "catppuccin/nvim",
+    name = "catppuccin-mocha",
+    priority = 100,
     config = function()
-      vim.cmd.colorscheme 'onedark'
-    end,
+      vim.cmd.colorscheme "catppuccin"
+    end
   },
 
   {
@@ -222,7 +215,7 @@ require('lazy').setup({
   },
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
+  { 'numToStr/Comment.nvim', opts = {}, lazy = false },
 
   -- Fuzzy Finder (files, lsp, etc)
   {
@@ -307,8 +300,14 @@ vim.o.timeoutlen = 300
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
 
+-- [mario] TODO Is this actually working?
+vim.g.tabstop = 4
+vim.g.shiftwidth = 4
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
+
+-- [mario] Add line numbers in every window
+vim.g.netrw_bufsettings = 'noma nomod nu nowrap ro nobl'
 
 -- [[ Basic Keymaps ]]
 
@@ -657,5 +656,244 @@ cmp.setup {
   },
 }
 
--- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- [mario] Packer to install some stuff that was not possible using lazy-lua (or I didn't care to check how to do it)
+require('packer').startup(function(use)
+  --packer
+  use 'wbthomason/packer.nvim'
+
+  --lsp
+  use 'neovim/nvim-lspconfig'
+  use { 'neoclide/coc.nvim', branch = 'release' }
+
+  --auto complete
+  use 'hrsh7th/cmp-nvim-lsp'
+  use 'hrsh7th/cmp-buffer'
+  use 'hrsh7th/cmp-path'
+  use 'hrsh7th/cmp-cmdline'
+  use 'hrsh7th/nvim-cmp'
+  --
+  use 'hrsh7th/cmp-vsnip'
+  use 'hrsh7th/vim-vsnip'
+  use 'hrsh7th/vim-vsnip-integ'
+  vim.opt.completeopt = { "menu", "menuone", "noselect" }
+end)
+
+-- local has_words_before = function()
+--   local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+--   return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
+-- end
+--
+-- local feedkey = function(key, mode)
+--   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(key, true, true, true), mode, true)
+-- end
+
+
+-- local cmp = require('cmp')
+
+-- cmp.setup({
+--   snippet = {
+--     expand = function(args)
+--       vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
+--     end,
+--   },
+--   mapping = {
+--     -- ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+--     ["<Tab>"] = cmp.mapping(function(fallback)
+--       if cmp.visible() then
+--         cmp.select_next_item()
+--       elseif vim.fn["vsnip#available"](1) == 1 then
+--         feedkey("<Plug>(vsnip-expand-or-jump)", "")
+--       elseif has_words_before() then
+--         cmp.complete()
+--       else
+--         fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
+--       end
+--     end, { "i", "s" }),
+--     ["<S-Tab>"] = cmp.mapping(function()
+--       if cmp.visible() then
+--         cmp.select_prev_item()
+--       elseif vim.fn["vsnip#jumpable"](-1) == 1 then
+--         feedkey("<Plug>(vsnip-jump-prev)", "")
+--       end
+--     end, { "i", "s" }),
+--   },
+--   sources = cmp.config.sources({
+--     { name = 'nvim_lsp' },
+--     { name = 'vsnip' }, -- For vsnip users.
+--   }, {
+--     { name = 'buffer' },
+--   })
+-- })
+
+
+-- local capabilities = require('cmp_nvim_lsp').default_capabilities() --nvim-cmp
+
+-- local on_attach = function(client, bufnr)
+--   local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+--   local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+--
+--   buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+-- end
+
+-- [mario] Setup lspconfig.
+local nvim_lsp = require('lspconfig')
+
+-- [mario] GoLang
+nvim_lsp['gopls'].setup {
+  cmd = { 'gopls' },
+  on_attach = on_attach,
+  capabilities = capabilities,
+  settings = {
+    gopls = {
+      experimentalPostfixCompletions = true,
+      analyses = {
+        unusedparams = true,
+        shadow = true,
+      },
+      staticcheck = true,
+    },
+  },
+  init_options = {
+    usePlaceholders = true,
+  }
+}
+
+-- [mario] Sidebar
+local sidebar = require("sidebar-nvim")
+local opts = {
+  open = true,
+  sections = {"datetime", "diagnostics", "files"},
+  ["files"] = {
+        icon = "",
+        show_hidden = false,
+        ignored_paths = {"%.git$"}
+  },
+  ["git"] = {
+
+  }
+}
+sidebar.setup(opts)
+
+-- [mario] Run gofmt + goimport on save
+local format_sync_grp = vim.api.nvim_create_augroup("GoImport", {})
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*.go",
+  callback = function()
+   require('go.format').goimport()
+  end,
+  group = format_sync_grp,
+})
+
+-- [mario] More Go stuff
+require('go').setup({
+  disable_defaults = false, -- true|false when true set false to all boolean settings and replace all table
+  -- settings with {}
+  go='go', -- go command, can be go[default] or go1.18beta1
+  goimport='gopls', -- goimport command, can be gopls[default] or either goimport or golines if need to split long lines
+  fillstruct = 'gopls', -- default, can also use fillstruct
+  gofmt = 'gofumpt', --gofmt cmd,
+  max_line_len = 128, -- max line length in golines format, Target maximum line length for golines
+  tag_transform = false, -- can be transform option("snakecase", "camelcase", etc) check gomodifytags for details and more options
+  tag_options = 'json=omitempty', -- sets options sent to gomodifytags, i.e., json=omitempty
+  gotests_template = "", -- sets gotests -template parameter (check gotests for details)
+  gotests_template_dir = "", -- sets gotests -template_dir parameter (check gotests for details)
+  comment_placeholder = '' ,  -- comment_placeholder your cool placeholder e.g. 󰟓       
+  icons = {breakpoint = '🧘', currentpos = '🏃'},  -- setup to `false` to disable icons setup
+  verbose = false,  -- output loginf in messages
+  lsp_cfg = false, -- true: use non-default gopls setup specified in go/lsp.lua
+                   -- false: do nothing
+                   -- if lsp_cfg is a table, merge table with with non-default gopls setup in go/lsp.lua, e.g.
+                   --   lsp_cfg = {settings={gopls={matcher='CaseInsensitive', ['local'] = 'your_local_module_path', gofumpt = true }}}
+  lsp_gofumpt = false, -- true: set default gofmt in gopls format to gofumpt
+  lsp_on_attach = nil, -- nil: use on_attach function defined in go/lsp.lua,
+                       --      when lsp_cfg is true
+                       -- if lsp_on_attach is a function: use this function as on_attach function for gopls
+  lsp_keymaps = true, -- set to false to disable gopls/lsp keymap
+  lsp_codelens = true, -- set to false to disable codelens, true by default, you can use a function
+  -- function(bufnr)
+  --    vim.api.nvim_buf_set_keymap(bufnr, "n", "<space>F", "<cmd>lua vim.lsp.buf.formatting()<CR>", {noremap=true, silent=true})
+  -- end
+  -- to setup a table of codelens
+  diagnostic = {  -- set diagnostic to false to disable vim.diagnostic setup
+    hdlr = false, -- hook lsp diag handler and send diag to quickfix
+    underline = true,
+    -- virtual text setup
+    virtual_text = { spacing = 0, prefix = '■' },
+    signs = true,
+    update_in_insert = false,
+  },
+  lsp_document_formatting = true,
+  -- set to true: use gopls to format
+  -- false if you want to use other formatter tool(e.g. efm, nulls)
+  lsp_inlay_hints = {
+    enable = true,
+    -- hint style, set to 'eol' for end-of-line hints, 'inlay' for inline hints
+    -- inlay only avalible for 0.10.x
+    style = 'inlay',
+    -- Note: following setup only works for style = 'eol', you do not need to set it for 'inlay'
+    -- Only show inlay hints for the current line
+    only_current_line = false,
+    -- Event which triggers a refersh of the inlay hints.
+    -- You can make this "CursorMoved" or "CursorMoved,CursorMovedI" but
+    -- not that this may cause higher CPU usage.
+    -- This option is only respected when only_current_line and
+    -- autoSetHints both are true.
+    only_current_line_autocmd = "CursorHold",
+    -- whether to show variable name before type hints with the inlay hints or not
+    -- default: false
+    show_variable_name = true,
+    -- prefix for parameter hints
+    parameter_hints_prefix = "󰊕 ",
+    show_parameter_hints = true,
+    -- prefix for all the other hints (type, chaining)
+    other_hints_prefix = "=> ",
+    -- whether to align to the lenght of the longest line in the file
+    max_len_align = false,
+    -- padding from the left if max_len_align is true
+    max_len_align_padding = 1,
+    -- whether to align to the extreme right or not
+    right_align = false,
+    -- padding from the right if right_align is true
+    right_align_padding = 6,
+    -- The color of the hints
+    highlight = "Comment",
+  },
+  gopls_cmd = nil, -- if you need to specify gopls path and cmd, e.g {"/home/user/lsp/gopls", "-logfile","/var/log/gopls.log" }
+  gopls_remote_auto = true, -- add -remote=auto to gopls
+  gocoverage_sign = "█",
+  sign_priority = 5, -- change to a higher number to override other signs
+  dap_debug = true, -- set to false to disable dap
+  dap_debug_keymap = true, -- true: use keymap for debugger defined in go/dap.lua
+                           -- false: do not use keymap in go/dap.lua.  you must define your own.
+                           -- Windows: Use Visual Studio keymap
+  dap_debug_gui = {}, -- bool|table put your dap-ui setup here set to false to disable
+  dap_debug_vt = { enabled_commands = true, all_frames = true }, -- bool|table put your dap-virtual-text setup here set to false to disable
+
+  dap_port = 38697, -- can be set to a number, if set to -1 go.nvim will pick up a random port
+  dap_timeout = 15, --  see dap option initialize_timeout_sec = 15,
+  dap_retries = 20, -- see dap option max_retries
+  build_tags = "tag1,tag2", -- set default build tags
+  textobjects = true, -- enable default text jobects through treesittter-text-objects
+  test_runner = 'go', -- one of {`go`, `richgo`, `dlv`, `ginkgo`, `gotestsum`}
+  verbose_tests = true, -- set to add verbose flag to tests deprecated, see '-v' option
+  run_in_floaterm = false, -- set to true to run in a float window. :GoTermClose closes the floatterm
+                           -- float term recommend if you use richgo/ginkgo with terminal color
+
+  floaterm = {   -- position
+    posititon = 'auto', -- one of {`top`, `bottom`, `left`, `right`, `center`, `auto`}
+    width = 0.45, -- width of float window if not auto
+    height = 0.98, -- height of float window if not auto
+    title_colors = 'nord', -- default to nord, one of {'nord', 'tokyo', 'dracula', 'rainbow', 'solarized ', 'monokai'}
+                              -- can also set to a list of colors to define colors to choose from
+                              -- e.g {'#D8DEE9', '#5E81AC', '#88C0D0', '#EBCB8B', '#A3BE8C', '#B48EAD'}
+  },
+  trouble = false, -- true: use trouble to open quickfix
+  test_efm = false, -- errorfomat for quickfix, default mix mode, set to true will be efm only
+  luasnip = false, -- enable included luasnip snippets. you can also disable while add lua/snips folder to luasnip load
+  --  Do not enable this if you already added the path, that will duplicate the entries
+  on_jobstart = function(cmd) _=cmd end, -- callback for stdout
+  on_stdout = function(err, data) _, _ = err, data end, -- callback when job started
+  on_stderr = function(err, data)  _, _ = err, data  end, -- callback for stderr
+  on_exit = function(code, signal, output)  _, _, _ = code, signal, output  end, -- callback for jobexit, output : string
+  iferr_vertical_shift = 4 -- defines where the cursor will end up vertically from the begining of if err statement
+})
