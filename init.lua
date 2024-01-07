@@ -40,12 +40,31 @@ require('lazy').setup({
     opts = {},
   },
 
+  -- [mario] ChatGPT, yes, because I can
+  {
+    "jackMort/ChatGPT.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("chatgpt").setup()
+    end,
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim"
+    }
+  },
   -- Git related plugins
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
 
+  -- [mario] calculator, do i really need this?
+  'jbyuki/quickmath.nvim',
+
   -- [mario] Something about the terminal
   -- 'Shougo/deol.nvim',
+
+  -- [mario] floating windows
+  'ray-x/guihua.lua',
 
   -- [mario] allows CTRL+D like selection
   'mg979/vim-visual-multi',
@@ -324,7 +343,7 @@ vim.o.shiftwidth = 4
 vim.o.termguicolors = true
 
 -- [mario] Add line numbers in every window
-vim.g.netrw_bufsettings = 'noma nomod nu nowrap ro nobl'
+-- vim.g.netrw_bufsettings = 'noma nomod nu nowrap ro nobl'
 
 -- [[ Basic Keymaps ]]
 
@@ -410,7 +429,7 @@ vim.api.nvim_create_user_command('LiveGrepGitRoot', live_grep_git_root, {})
 
 -- See `:help telescope.builtin`
 vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
-vim.keymap.set('n', '<leader><space>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
+vim.keymap.set('n', '<leader><bf>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
 vim.keymap.set('n', '<leader>/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
@@ -781,7 +800,7 @@ nvim_lsp['gopls'].setup {
 -- [mario] Sidebar
 local sidebar = require("sidebar-nvim")
 local opts = {
-  open = true,
+  open = false,
   sections = { "datetime", "diagnostics", "todos", "buffers" },
   ["datetime"] = {
     icon = "-",
@@ -820,7 +839,8 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 -- [mario] More Go stuff
-require('go').setup({
+local go = require("go")
+go.setup({
   disable_defaults = false, -- true|false when true set false to all boolean settings and replace all table
   -- settings with {}
   go = 'go', -- go command, can be go[default] or go1.18beta1
@@ -911,7 +931,7 @@ require('go').setup({
   textobjects = true,                                            -- enable default text jobects through treesittter-text-objects
   test_runner = 'go',                                            -- one of {`go`, `richgo`, `dlv`, `ginkgo`, `gotestsum`}
   verbose_tests = true,                                          -- set to add verbose flag to tests deprecated, see '-v' option
-  run_in_floaterm = false,                                       -- set to true to run in a float window. :GoTermClose closes the floatterm
+  run_in_floaterm = true,                                        -- set to true to run in a float window. :GoTermClose closes the floatterm
   -- float term recommend if you use richgo/ginkgo with terminal color
 
   floaterm = {             -- position
@@ -929,22 +949,47 @@ require('go').setup({
   on_jobstart = function(cmd) _ = cmd end,                                     -- callback for stdout
   on_stdout = function(err, data) _, _ = err, data end,                        -- callback when job started
   on_stderr = function(err, data) _, _ = err, data end,                        -- callback for stderr
-  on_exit = function(code, signal, output) _, _, _ = code, signal, output end, -- callback for jobexit, output : string
+  on_exit = function(code, signal, output) _, _, _ = code, signal, output end, -- callback for jobexit, output :tring
   iferr_vertical_shift = 4                                                     -- defines where the cursor will end up vertically from the begining of if err statement
 })
 
+-- [mario]
+vim.api.nvim_set_keymap('n', '<C-t>', ':GoTestFile<CR>', { silent = true })
+vim.api.nvim_set_keymap('n', '<C-S-D>', ':DlvTestCurrent<CR>', { silent = true })
+vim.api.nvim_set_keymap('n', '<C-B>', ':DlvAddBreakpoint<CR>', { silent = true })
+vim.api.nvim_set_keymap('n', '<C-S-B>', ':DlvRemoveBreakpoint<CR>', { silent = true })
+
 -- [mario] acejump
 local hop = require('hop')
-local directions = require('hop.hint').HintDirection
-vim.keymap.set('', '<C-;>', function()
-  hop.hint_char2({current_line_only=false})
-end, {remap=true})
-vim.keymap.set('', 'f', function()
-  hop.hint_char1({current_line_only=true})
-end, {remap=true})
-vim.keymap.set('', '<S-l>', function()
+vim.keymap.set('n', '<leader>nt', function()
+  hop.hint_char2({ current_line_only = false })
+end, { remap = true })
+vim.keymap.set('n', 'f', function()
+  hop.hint_char1({ current_line_only = true })
+end, { remap = true })
+vim.keymap.set('n', '<C-l>', function()
   hop.hint_lines_skip_whitespace({})
-end, {remap=true})
-vim.keymap.set('', '<C-/>', function()
+end, { remap = true })
+vim.keymap.set('n', '<C-f>', function()
   hop.hint_patterns({})
-end, {remap=true})
+end, { remap = true })
+
+-- [mario] HDL Only define once
+if not require 'lspconfig.configs'.hdl_checker then
+  require 'lspconfig.configs'.hdl_checker = {
+    default_config = {
+      cmd = { "hdl_checker", "--lsp", },
+      filetypes = { "vhdl", "verilog", "systemverilog" },
+      root_dir = function(fname)
+        -- will look for the .hdl_checker.config file in parent directory, a
+        -- .git directory, or else use the current directory, in that order.
+        local util = require 'lspconfig'.util
+        return util.root_pattern('.hdl_checker.config')(fname) or util.find_git_ancestor(fname) or
+            util.path.dirname(fname)
+      end,
+      settings = {},
+    },
+  }
+end
+
+require 'lspconfig'.hdl_checker.setup {}
