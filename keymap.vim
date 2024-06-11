@@ -50,6 +50,7 @@ set updatetime=100
 let mapleader=" "
 noremap ; :
 noremap m ;
+noremap ? /
 
 " Avoid overriding content when pasting in visual mode
 xnoremap p P

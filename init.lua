@@ -270,6 +270,8 @@ if not vim.loop.fs_stat(lazypath) then
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+-- MARIO:
+local augroup = vim.api.nvim_create_augroup('LspFormatting', {})
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -312,6 +314,9 @@ require('lazy').setup({
   'ziglang/zig.vim',
   'NTBBloodbath/zig-tools.nvim',
 
+  -- MARIO: Terminal
+  { 'akinsho/toggleterm.nvim', version = '*', config = true },
+
   -- MARIO: Hex editor
   {
     'RaafatTurki/hex.nvim',
@@ -332,6 +337,81 @@ require('lazy').setup({
 
   -- MARIO:
   -- 'ErichDonGubler/lsp_lines.nvim',
+
+  -- MARIO: Cmake, for C++ project
+  {
+    'Civitasv/cmake-tools.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = {
+      config = function()
+        require('cmake-tools').setup {
+          cmake_dap_configuration = { -- debug settings for cmake
+            name = 'cpp',
+            type = 'gdb',
+            request = 'launch',
+            stopOnEntry = false,
+            runInTerminal = true,
+            console = 'integratedTerminal',
+          },
+        }
+      end,
+    },
+  },
+  {
+    'rcarriga/nvim-dap-ui',
+    dependencies = { 'mfussenegger/nvim-dap', 'nvim-neotest/nvim-nio' },
+    event = 'VeryLazy',
+    config = function()
+      local dap = require 'dap'
+      local dapui = require 'dapui'
+      dapui.setup()
+      dap.listeners.after.event_initialized['dapui_config'] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated['dapui_config'] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited['dapui_config'] = function()
+        dapui.close()
+      end
+    end,
+  },
+  'rhysd/vim-clang-format',
+  {
+    'nvimtools/none-ls.nvim',
+    event = 'VeryLazy',
+    config = function()
+      local null_ls = require 'null-ls'
+      null_ls.setup {
+        sources = {
+          null_ls.builtins.formatting.clang_format,
+        },
+        on_attach = function(client, bufnr)
+          if client.supports_method 'textDocument/formatting' then
+            vim.api.nvim_clear_autocmds {
+              group = augroup,
+              buffer = bufnr,
+            }
+            vim.api.nvim_create_autocmd('BufWritePre', {
+              group = augroup,
+              buffer = bufnr,
+              callback = function()
+                vim.lsp.buf.format { bufnr = bufnr }
+              end,
+            })
+          end
+        end,
+      }
+      vim.keymap.set('n', '<leader>fm', vim.lsp.buf.format, {})
+    end,
+  },
+  'mfussenegger/nvim-dap',
+  { 'leoluz/nvim-dap-go', opts = {
+    event = 'VeryLazy',
+    config = function()
+      require('dap-go').setup()
+    end,
+  } },
 
   -- MARIO: helps with pairing quotes, brackets, etc
   {
@@ -442,11 +522,8 @@ require('lazy').setup({
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
         ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
+        ['<leader>h'] = { name = '[H]Search', _ = 'which_key_ignore' },
       }
-      -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
-      }, { mode = 'v' })
     end,
   },
 
@@ -578,7 +655,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>b', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
-      vim.keymap.set('n', '<leader>/', function()
+      vim.keymap.set('n', '/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
@@ -606,9 +683,32 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
+      {
+        'williamboman/mason.nvim',
+        config = true,
+        opts = {
+          ensure_installed = {
+            'clangd',
+            'clang_format',
+            'codelldb',
+          },
+        },
+      }, -- NOTE: Must be loaded before dependants
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
+      {
+        'jay-babu/mason-nvim-dap.nvim',
+        event = 'VeryLazy',
+        dependencies = {
+          'williamboman/mason.nvim',
+          'mfussenegger/nvim-dap',
+        },
+        opts = {
+          ensure_installed = {
+            'codelldb',
+          },
+        },
+      },
 
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
@@ -759,10 +859,10 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
-        -- gopls = {},
+        clangd = {},
+        gopls = {},
         -- pyright = {},
-        -- rust_analyzer = {},
+        rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -1095,6 +1195,7 @@ require('lazy').setup({
       ensure_installed = {
         'bash',
         'c',
+        'cpp',
         'html',
         'lua',
         'luadoc',
@@ -1112,7 +1213,7 @@ require('lazy').setup({
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
+        -- additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
@@ -1234,9 +1335,17 @@ local hop = require 'hop'
 vim.keymap.set('', '<leader>h', function()
   hop.hint_char2 { current_line_only = false }
 end, { remap = true, desc = '2 char hop' })
--- vim.keymap.set('', 'f', function()
---   hop.hint_char1 { current_line_only = true }
--- end, { remap = true, desc = '1 char line hop' })
+
+vim.keymap.set('', 't', function()
+  hop.hint_char2 { current_line_only = false }
+end, { remap = true, desc = '2 char hop' })
+
+vim.keymap.set('', 'f', function()
+  hop.hint_char1 { current_line_only = true }
+end, { remap = true, desc = '1 char line hop' })
+vim.keymap.set('', 'F', function()
+  hop.hint_char1 { current_line_only = true }
+end, { remap = true, desc = '1 char line hop' })
 ----------------------------------------------------------------------------------------------------------
 
 -- MARIO: Golang ----------------------------------------------------------------------------------------
@@ -1299,3 +1408,25 @@ vim.api.nvim_set_keymap('n', '<C-t>', ':GoTestFile<CR>', { silent = true })
 vim.api.nvim_set_keymap('n', '<C-S-D>', ':DlvTestCurrent<CR>', { silent = true })
 vim.api.nvim_set_keymap('n', '<C-B>', ':DlvAddBreakpoint<CR>', { silent = true })
 vim.api.nvim_set_keymap('n', '<C-S-B>', ':DlvRemoveBreakpoint<CR>', { silent = true })
+
+-- MARIO: Terminal
+vim.api.nvim_set_keymap('n', '<leader>te', ':ToggleTerm<CR>', { silent = true })
+
+local dap = require 'dap'
+dap.configurations.cpp = {
+  {
+    name = 'Launch',
+    type = 'gdb',
+    request = 'launch',
+    program = function()
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    cwd = '${workspaceFolder}',
+    stopAtBeginningOfMainSubprogram = false,
+  },
+}
+dap.adapters.gdb = {
+  type = 'executable',
+  command = 'gdb',
+  args = { '-i', 'dap' },
+}
