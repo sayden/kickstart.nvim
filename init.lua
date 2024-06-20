@@ -90,6 +90,9 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- Integrate system's clipboard
+vim.opt.clipboard = 'unnamedplus'
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
@@ -109,11 +112,6 @@ vim.opt.mouse = 'a'
 
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
-
--- Sync clipboard between OS and Neovim.
---  Remove this option if you want your OS clipboard to remain independent.
---  See `:help 'clipboard'`
-vim.opt.clipboard = 'unnamedplus'
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -154,12 +152,104 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- Configure tab settings
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 2
+vim.opt.shiftwidth = 2
+
+-- Disable timeout
+vim.opt.ttimeoutlen = 0
+
+-- Folding
+vim.opt.foldmethod = 'manual'
+vim.opt.foldlevel = 99
+vim.opt.foldenable = true
+
+-- Color column
+vim.opt.colorcolumn = '100'
+vim.opt.updatetime = 100
+
+-- QOL
+vim.keymap.set('', ';', ':', { noremap = true })
+vim.keymap.set('', '?', '/', { noremap = true })
+
+-- undo operation
+vim.keymap.set('n', 'l', 'u', { noremap = true })
+
+-- insert key
+vim.keymap.set('', 'k', 'i', { noremap = true })
+vim.keymap.set('', 'K', 'I', { noremap = true })
+
+-- copy to system clipboard
+vim.keymap.set('v', 'Y', '"+y', { noremap = true })
+
+-- jump lines
+vim.keymap.set({ 'n', 'v' }, 'U', '5k', { silent = true })
+vim.keymap.set({ 'n', 'v' }, 'E', '5j', { silent = true })
+
+-- Cursor movement
+vim.keymap.set({ 'n', 'v' }, 'n', 'h', { silent = true, noremap = false })
+vim.keymap.set({ 'n', 'v' }, 'u', 'k', { silent = true, noremap = false })
+vim.keymap.set({ 'n', 'v' }, 'e', 'j', { silent = true, noremap = false })
+vim.keymap.set({ 'n', 'v' }, 'i', 'l', { silent = true, noremap = false })
+
+-- search forward / backwards
+vim.keymap.set('n', '=', 'n', { silent = true })
+vim.keymap.set('n', '-', 'N', { silent = true })
+
+-- go to start of the lines
+vim.keymap.set('', 'N', '0', { silent = true })
+-- go to end of the lines
+vim.keymap.set('', 'I', '$', { silent = true })
+vim.keymap.set('i', '<C-a>', '<ESC>A', { silent = true })
+vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', { silent = true })
+
+-- set h (same as n, cursor left) to 'end of word'
+vim.keymap.set('', 'h', 'e', { silent = true })
+
+-- move viewport
+vim.keymap.set('n', '<C-u>', '10<C-y>', { silent = true })
+vim.keymap.set('n', '<C-e>', '10<C-e>', { silent = true })
+
+-- Custom cursor movement
+vim.cmd 'source $HOME/.config/nvim/cursor.vim'
+
+-- Insert mode Cursor movement
+-- tnoremap <Esc> <C-\><C-n>
+-- inoremap <C-a> <ESC>A
+
+-- exec "nohlsearch"
+vim.keymap.set('n', '<Esc>', ':nohlsearch<CR>', { noremap = true })
+
+-- Open the vimrc file anytime
+vim.keymap.set('n', '<leader>rc', ':e $HOME/.config/nvim/init.lua<CR>', { noremap = true })
+vim.keymap.set('n', '<leader>no', ':e $HOME/.config/nvim/notes.md<CR>', { noremap = true })
+vim.keymap.set('n', '<leader>km', ':e $HOME/.config/nvim/keymap.vim<CR>', { noremap = true })
+
+-- Avoid overriding content when pasting in visual mode
+vim.keymap.set('x', 'p', 'P', { noremap = true })
+-- xnoremap p P
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+-- ==================== Window management ===================================
+-- Resize with arrows
+vim.keymap.set('n', '<leader>w', '<C-w>v', { desc = 'Split window vertically' })
+vim.keymap.set('n', '<leader>u', '<C-w>k', { desc = 'Go to window up' })
+vim.keymap.set('n', '<leader>e', '<C-w>j', { desc = 'Go to window down' })
+vim.keymap.set('n', '<leader>i', '<C-w>l', { desc = 'Go to window right' })
+vim.keymap.set('n', '<leader>n', '<C-w>h', { desc = 'Go to window left' })
+
+-- Resize with arrows
+vim.keymap.set('n', '<up>', ':res +5<CR>', { desc = 'Increase window height' })
+vim.keymap.set('n', '<down>', ':res -5<CR>', { desc = 'Decrease window height' })
+vim.keymap.set('n', '<left>', ':vertical resize -5<CR>', { desc = 'Decrease window width' })
+vim.keymap.set('n', '<right>', ':vertical resize +5<CR>', { desc = 'Increase window width' })
 
 -- Diagnostic keymaps TODO review and uncomment
 -- vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
@@ -204,13 +294,13 @@ vim.keymap.set('n', 'S', ':w<CR>', { noremap = true })
 -- vim.keymap.set('v', 'Y', '+y', { noremap = true })
 --
 -- ------------------------------- Tab management ------------------------
-vim.keymap.set('n', 'tu', ':tabe<CR>', { noremap = true })
-vim.keymap.set('n', 'tU', ':tab split<CR>', { noremap = true })
+vim.keymap.set('n', 'Tu', ':tabe<CR>', { noremap = true })
+vim.keymap.set('n', 'TU', ':tab split<CR>', { noremap = true })
 
-vim.keymap.set('', 'tn', ':-tabnext<CR>', { noremap = true })
-vim.keymap.set('', 'ti', ':+tabnext<CR>', { noremap = true })
-vim.keymap.set('t', 'tn', ':-tabnext<CR>', { noremap = true })
-vim.keymap.set('t', 'ti', ':+tabnext<CR>', { noremap = true })
+vim.keymap.set('', 'Tn', ':-tabnext<CR>', { noremap = true })
+vim.keymap.set('', 'Ti', ':+tabnext<CR>', { noremap = true })
+vim.keymap.set('t', 'Tn', ':-tabnext<CR>', { noremap = true })
+vim.keymap.set('t', 'Ti', ':+tabnext<CR>', { noremap = true })
 
 --
 -- -- ---------------------------- cursor movement -------------------------
@@ -309,6 +399,18 @@ require('lazy').setup({
   },
   -- MARIO: Detect indentation
   'tpope/vim-sleuth',
+
+  -- MARIO: Word wrap
+  {
+    'andrewferrier/wrapping.nvim',
+    lazy = false,
+    config = function()
+      require('wrapping').setup {}
+    end,
+  },
+
+  -- MARIO: To manipulate files with sudo
+  'lambdalisue/suda.vim',
 
   -- MARIO: zig
   'ziglang/zig.vim',
@@ -1116,6 +1218,7 @@ require('lazy').setup({
         -- Show box drawing characters for the tree hierarchy
         show_guides = true,
       }
+      vim.keymap.set('n', '<leader>aa', ':AerialToggle<CR>', { silent = true, desc = 'Toggle Aerial' }) -- Aerial
     end,
   },
 
@@ -1141,6 +1244,13 @@ require('lazy').setup({
     ft = { 'go', 'gomod' },
     build = ':lua require("go.install").update_all_sync()', -- if you need to install/update all binaries
   },
+  {
+    'leoluz/nvim-dap-go',
+    dependencies = { 'mfussenegger/nvim-dap', 'rcarriga/nvim-dap-ui', 'nvim-neotest/nvim-nio' },
+    config = function()
+      require('dap-go').setup()
+    end,
+  },
 
   -- Highlight todo, notes, etc in comments
   {
@@ -1153,6 +1263,20 @@ require('lazy').setup({
         MARIO = { icon = '⏲ ', color = 'test' },
       },
     },
+    config = function()
+      require('todo-comments').setup()
+      vim.keymap.set('n', ']t', function()
+        require('todo-comments').jump_next()
+      end, { desc = 'Next todo comment' })
+
+      vim.keymap.set('n', '[t', function()
+        require('todo-comments').jump_prev()
+      end, { desc = 'Previous todo comment' })
+
+      vim.keymap.set('n', ']T', function()
+        require('todo-comments').jump_next { keywords = { 'NOTE' } }
+      end, { desc = 'Next error/warning todo comment' })
+    end,
   },
 
   { -- Collection of various small independent plugins/modules
@@ -1390,24 +1514,10 @@ vim.keymap.set('n', '<leader>todo', ':TodoTelescope<CR>', { silent = true, desc 
 -- MARIO: Setup plugin to display error messages in LSP properly
 -- require('lsp_lines').setup()
 
--- MARIO: Todo markings
-vim.keymap.set('n', ']t', function()
-  require('todo-comments').jump_next()
-end, { desc = 'Next todo comment' })
-
-vim.keymap.set('n', '[t', function()
-  require('todo-comments').jump_prev()
-end, { desc = 'Previous todo comment' })
-
-vim.keymap.set('n', ']T', function()
-  require('todo-comments').jump_next { keywords = { 'NOTE' } }
-end, { desc = 'Next error/warning todo comment' })
-
 -- MARIO: Golang's debugger
 vim.api.nvim_set_keymap('n', '<C-t>', ':GoTestFile<CR>', { silent = true })
 vim.api.nvim_set_keymap('n', '<C-S-D>', ':DlvTestCurrent<CR>', { silent = true })
-vim.api.nvim_set_keymap('n', '<C-B>', ':DlvAddBreakpoint<CR>', { silent = true })
-vim.api.nvim_set_keymap('n', '<C-S-B>', ':DlvRemoveBreakpoint<CR>', { silent = true })
+vim.api.nvim_set_keymap('n', '<C-S-B>', ':DlvToggleBreakpoint<CR>', { silent = true })
 
 -- MARIO: Terminal
 vim.api.nvim_set_keymap('n', '<leader>te', ':ToggleTerm<CR>', { silent = true })
@@ -1419,7 +1529,8 @@ dap.configurations.cpp = {
     type = 'gdb',
     request = 'launch',
     program = function()
-      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+      return vim.fn.getcwd() .. '/build/tests'
+      -- return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/test_main', 'file')
     end,
     cwd = '${workspaceFolder}',
     stopAtBeginningOfMainSubprogram = false,
