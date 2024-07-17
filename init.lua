@@ -171,7 +171,6 @@ vim.opt.updatetime = 100
 
 -- QOL
 vim.keymap.set('', ';', ':', { noremap = true })
-vim.keymap.set('', '?', '/', { noremap = true })
 
 -- undo operation
 vim.keymap.set('n', 'l', 'u', { noremap = true })
@@ -417,7 +416,16 @@ require('lazy').setup({
   'NTBBloodbath/zig-tools.nvim',
 
   -- MARIO: Terminal
-  { 'akinsho/toggleterm.nvim', version = '*', config = true },
+  {
+    'akinsho/toggleterm.nvim',
+    version = '*',
+    config = function()
+      require('toggleterm').setup {
+        direction = 'vertical',
+        size = 120,
+      }
+    end,
+  },
 
   -- MARIO: Hex editor
   {
@@ -466,7 +474,15 @@ require('lazy').setup({
     config = function()
       local dap = require 'dap'
       local dapui = require 'dapui'
+      local dapgo = require 'dap-go'
       dapui.setup()
+      dapgo.setup()
+      dap.listeners.before.attach.dapui_config = function()
+        dapui.open()
+      end
+      dap.listeners.before.launch.dapui_config = function()
+        dapui.open()
+      end
       dap.listeners.after.event_initialized['dapui_config'] = function()
         dapui.open()
       end
@@ -508,18 +524,23 @@ require('lazy').setup({
     end,
   },
   'mfussenegger/nvim-dap',
-  { 'leoluz/nvim-dap-go', opts = {
-    event = 'VeryLazy',
-    config = function()
-      require('dap-go').setup()
-    end,
-  } },
 
   -- MARIO: helps with pairing quotes, brackets, etc
   {
     'kylechui/nvim-surround',
     version = '*', -- Use for stability; omit to use `main` branch for the latest features
     event = 'VeryLazy',
+    dependencies = {
+      'jay-babu/mason-nvim-dap.nvim',
+      'theHamsta/nvim-dap-virtual-text',
+      'rcarriga/nvim-dap-ui',
+      'anuvyklack/hydra.nvim',
+      'nvim-telescope/telescope-dap.nvim',
+      'rcarriga/cmp-dap',
+    },
+    keys = {
+      { '<leader>d', desc = '[D]ebug Menu' },
+    },
     config = function()
       require('nvim-surround').setup {
         keymaps = {}, -- Defines plugin keymaps
@@ -570,9 +591,9 @@ require('lazy').setup({
         vim.keymap.set('n', 'n', api.node.open.edit, opts 'Close')
         vim.keymap.del('n', '<C-e>', opts 'Open in place')
         vim.keymap.set('n', 'u', 'k', opts 'Move up')
-        vim.keymap.set('n', 'U', '10k', opts 'Move up 15')
+        vim.keymap.set('n', 'U', '5k', opts 'Move up 15')
         vim.keymap.set('n', 'e', 'j', opts 'Move down')
-        vim.keymap.set('n', 'E', '10j', opts 'Move down 15')
+        vim.keymap.set('n', 'E', '5j', opts 'Move down 15')
         vim.keymap.set('n', '?', api.tree.toggle_help, opts 'Help')
       end,
     },
@@ -619,7 +640,7 @@ require('lazy').setup({
       -- Document existing key chains
       require('which-key').register {
         ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
+        ['<leader>d'] = { name = '[D]ebug', _ = 'which_key_ignore' },
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
@@ -757,13 +778,13 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>b', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
-      vim.keymap.set('n', '/', function()
+      vim.keymap.set('n', '?', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
         })
-      end, { desc = '[/] Fuzzily search in current buffer' })
+      end, { desc = '[?] Fuzzily search in current buffer' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
@@ -881,7 +902,7 @@ require('lazy').setup({
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
-          map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
+          map('<leader>cs', require('telescope.builtin').lsp_document_symbols, '[C]ode [S]ymbols')
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
@@ -1175,15 +1196,33 @@ require('lazy').setup({
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
+    lazy = false,
+    opts = {},
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-
-      -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
+      require('tokyonight').setup {
+        -- your configuration comes here
+        -- or leave it empty to use the default settings
+        style = 'night', -- The theme comes in three styles, `storm`, `moon`, a darker variant `night` and `day`
+        transparent = true, -- Enable this to disable setting the background color
+        styles = {
+          -- Style to be applied to different syntax groups
+          -- Value is any valid attr-list value for `:help nvim_set_hl`
+          comments = { italic = true },
+          keywords = { italic = true },
+          functions = {},
+          variables = {},
+          -- Background styles. Can be "dark", "transparent" or "normal"
+          floats = 'dark', -- style for floating windows
+        },
+      }
+      --   --   -- Load the colorscheme here.
+      --   --   -- Like many other themes, this one has different styles, and you could load
+      --   --   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+      vim.cmd.colorscheme 'tokyonight'
+      --   --
+      --   --   -- You can configure highlights by doing something like:
+      --   -- vim.cmd.hi 'Comment gui=none'
     end,
   },
 
@@ -1246,6 +1285,7 @@ require('lazy').setup({
   },
   {
     'leoluz/nvim-dap-go',
+    event = 'VeryLazy',
     dependencies = { 'mfussenegger/nvim-dap', 'rcarriga/nvim-dap-ui', 'nvim-neotest/nvim-nio' },
     config = function()
       require('dap-go').setup()
@@ -1529,8 +1569,8 @@ dap.configurations.cpp = {
     type = 'gdb',
     request = 'launch',
     program = function()
-      return vim.fn.getcwd() .. '/build/tests'
-      -- return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/test_main', 'file')
+      -- return vim.fn.getcwd() .. '/build/main'
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/test_main', 'file')
     end,
     cwd = '${workspaceFolder}',
     stopAtBeginningOfMainSubprogram = false,
@@ -1541,3 +1581,20 @@ dap.adapters.gdb = {
   command = 'gdb',
   args = { '-i', 'dap' },
 }
+
+-- MARIO: Binding to show error messages
+vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, { noremap = true, silent = true })
+-- require('dap-go').setup {
+--   external_config = {
+--     enabled = true,
+--   },
+-- }
+--
+-- dap.configurations.go = {
+--   {
+--     type = 'go',
+--     name = 'Attach remote',
+--     request = 'attach',
+--     mode = 'remote',
+--   },
+-- }
