@@ -113,8 +113,15 @@ vim.opt.mouse = 'a'
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
 
--- Enable break indent
-vim.opt.breakindent = true
+-- In init.lua or a separate settings.lua file
+vim.o.autoindent = true
+vim.o.cindent = true
+vim.o.smartindent = true
+vim.o.shiftwidth = 4
+vim.o.expandtab = true
+vim.o.tabstop = 4
+vim.o.softtabstop = 4
+vim.o.indentexpr = ''
 
 -- Save undo history
 vim.opt.undofile = true
@@ -151,11 +158,6 @@ vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
-
--- Configure tab settings
-vim.opt.tabstop = 4
-vim.opt.softtabstop = 2
-vim.opt.shiftwidth = 2
 
 -- Disable timeout
 vim.opt.ttimeoutlen = 0
@@ -396,8 +398,8 @@ require('lazy').setup({
     -- use opts = {} for passing setup options
     -- this is equalent to setup({}) function
   },
-  -- MARIO: Detect indentation
-  'tpope/vim-sleuth',
+  -- MARIO: Select a line of code and jump to it's github location
+  'almo7aya/openingh.nvim',
 
   -- MARIO: Word wrap
   {
@@ -415,38 +417,11 @@ require('lazy').setup({
   'ziglang/zig.vim',
   'NTBBloodbath/zig-tools.nvim',
 
-  -- MARIO: Terminal
-  {
-    'akinsho/toggleterm.nvim',
-    version = '*',
-    config = function()
-      require('toggleterm').setup {
-        direction = 'vertical',
-        size = 120,
-      }
-    end,
-  },
-
-  -- MARIO: Hex editor
-  {
-    'RaafatTurki/hex.nvim',
-    config = function()
-      require('hex').setup()
-      vim.keymap.set('n', '<leader>x', ':HexToggle<CR>', { silent = true, desc = 'Toggle Hex editor' }) -- Aerial
-    end,
-  },
-
   -- MARIO: activate capslock
   'tpope/vim-capslock',
 
   -- MARIO: switch between single line statement and multi line with gS and gJ
   'AndrewRadev/splitjoin.vim',
-
-  -- MARIO: show vertical lines at indentation levels
-  'Yggdroot/indentLine',
-
-  -- MARIO:
-  -- 'ErichDonGubler/lsp_lines.nvim',
 
   -- MARIO: Cmake, for C++ project
   {
@@ -497,33 +472,19 @@ require('lazy').setup({
   'rhysd/vim-clang-format',
   {
     'nvimtools/none-ls.nvim',
-    event = 'VeryLazy',
+    -- event = 'VeryLazy',
     config = function()
       local null_ls = require 'null-ls'
       null_ls.setup {
         sources = {
-          null_ls.builtins.formatting.clang_format,
+          -- null_ls.builtins.formatting.clang_format,
           null_ls.builtins.formatting.prettier,
         },
-        on_attach = function(client, bufnr)
-          if client.supports_method 'textDocument/formatting' then
-            vim.api.nvim_clear_autocmds {
-              group = augroup,
-              buffer = bufnr,
-            }
-            vim.api.nvim_create_autocmd('BufWritePre', {
-              group = augroup,
-              buffer = bufnr,
-              callback = function()
-                vim.lsp.buf.format { bufnr = bufnr }
-              end,
-            })
-          end
-        end,
       }
       vim.keymap.set('n', '<leader>fm', vim.lsp.buf.format, {})
     end,
   },
+
   'mfussenegger/nvim-dap',
 
   -- MARIO: helps with pairing quotes, brackets, etc
@@ -567,6 +528,12 @@ require('lazy').setup({
   {
     'nvim-tree/nvim-tree.lua',
     opts = {
+      view = {
+        adaptive_size = true,
+      },
+      update_focused_file = {
+        enable = true,
+      },
       on_attach = function(bufnr)
         -- custom mappings
         local api = require 'nvim-tree.api'
@@ -974,6 +941,12 @@ require('lazy').setup({
           vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event.buf }
         end,
       })
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = '*',
+        callback = function()
+          vim.bo.indentexpr = ''
+        end,
+      })
 
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
@@ -993,7 +966,16 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
-        gopls = {},
+        gopls = {
+          settings = {
+            gopls = {
+              analyses = {
+                unusedparams = true,
+              },
+              staticcheck = true,
+            },
+          },
+        },
         -- pyright = {},
         rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -1387,7 +1369,7 @@ require('lazy').setup({
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        -- additional_vim_regex_highlighting = { 'ruby' },
+        additional_vim_regex_highlighting = { 'ruby', 'go' },
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
@@ -1561,9 +1543,6 @@ vim.keymap.set('n', '<leader>aa', ':AerialToggle<CR>', { silent = true, desc = '
 vim.keymap.set('n', '<leader>nn', ':NvimTreeToggle<CR>', { silent = true, desc = 'Toggle NvimTree' }) -- NvimTree
 vim.keymap.set('n', '<leader>todo', ':TodoTelescope<CR>', { silent = true, desc = 'Search TODOs' }) -- Todo Telescope
 
--- MARIO: Setup plugin to display error messages in LSP properly
--- require('lsp_lines').setup()
-
 -- MARIO: Golang's debugger
 vim.api.nvim_set_keymap('n', '<C-t>', ':GoTestFile<CR>', { silent = true })
 vim.api.nvim_set_keymap('n', '<C-S-D>', ':DlvTestCurrent<CR>', { silent = true })
@@ -1593,7 +1572,7 @@ dap.adapters.gdb = {
 }
 
 -- MARIO: Binding to show error messages
-vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, { noremap = true, silent = true })
+vim.keymap.set('n', '<space>E', vim.diagnostic.open_float, { noremap = true, silent = true })
 -- require('dap-go').setup {
 --   external_config = {
 --     enabled = true,
@@ -1608,3 +1587,11 @@ vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, { noremap = true, sil
 --     mode = 'remote',
 --   },
 --}
+
+-- MARIO go to GH line
+-- for repository page
+vim.api.nvim_set_keymap('n', '<Leader>gr', ':OpenInGHRepo <CR>', { silent = true, noremap = true })
+
+-- for current file page
+vim.api.nvim_set_keymap('n', '<Leader>gf', ':OpenInGHFile <CR>', { silent = true, noremap = true })
+vim.api.nvim_set_keymap('v', '<Leader>gf', ':OpenInGHFileLines <CR>', { silent = true, noremap = true })

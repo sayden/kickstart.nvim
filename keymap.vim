@@ -1,5 +1,10 @@
 "==================================================== Editor behavior ====================
- " set clipboard+=unnamedplus
+set autoindent
+set smartindent
+set shiftwidth=4
+set expandtab
+set tabstop=4
+set softtabstop=4" set clipboard+=unnamedplus
 " set autochdir " Change directory to the file being edited"
 " set secure " Disable shell commands in vim"
 " set number " Show line numbers"
