@@ -122,6 +122,8 @@ vim.o.expandtab = true
 vim.o.tabstop = 4
 vim.o.softtabstop = 4
 vim.o.indentexpr = ''
+vim.o.showtabline = 2
+vim.opt.sessionoptions = 'curdir,folds,globals,help,tabpages,terminal,winsize'
 
 -- Save undo history
 vim.opt.undofile = true
@@ -154,7 +156,7 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 vim.opt.inccommand = 'split'
 
 -- Show which line your cursor is on
-vim.opt.cursorline = true
+-- vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
@@ -172,45 +174,43 @@ vim.opt.colorcolumn = '100'
 vim.opt.updatetime = 100
 
 -- QOL
-vim.keymap.set('', ';', ':', { noremap = true })
+-- vim.keymap.set('', ';', ':', { noremap = true })
 
 -- undo operation
-vim.keymap.set('n', 'l', 'u', { noremap = true })
+-- vim.keymap.set('n', 'l', 'u', { noremap = true })
 
 -- insert key
-vim.keymap.set('', 'k', 'i', { noremap = true })
-vim.keymap.set('', 'K', 'I', { noremap = true })
+-- vim.keymap.set('', 'k', 'i', { noremap = true })
+-- vim.keymap.set('', 'K', 'I', { noremap = true })
 
 -- copy to system clipboard
-vim.keymap.set('v', 'Y', '"+y', { noremap = true })
+-- vim.keymap.set('v', 'Y', '"+y', { noremap = true })
 
 -- jump lines
-vim.keymap.set({ 'n', 'v' }, 'U', '5k', { silent = true })
-vim.keymap.set({ 'n', 'v' }, 'E', '5j', { silent = true })
+-- vim.keymap.set({ 'n', 'v' }, 'U', '5k', { silent = true })
+-- vim.keymap.set({ 'n', 'v' }, 'E', '5j', { silent = true })
 
 -- Cursor movement
-vim.keymap.set({ 'n', 'v' }, 'n', 'h', { silent = true, noremap = false })
-vim.keymap.set({ 'n', 'v' }, 'u', 'k', { silent = true, noremap = false })
-vim.keymap.set({ 'n', 'v' }, 'e', 'j', { silent = true, noremap = false })
-vim.keymap.set({ 'n', 'v' }, 'i', 'l', { silent = true, noremap = false })
+-- vim.keymap.set({ 'n', 'v' }, 'n', 'h', { silent = true, noremap = false })
+-- vim.keymap.set({ 'n', 'v' }, 'u', 'k', { silent = true, noremap = false })
+-- vim.keymap.set({ 'n', 'v' }, 'e', 'j', { silent = true, noremap = false })
+-- vim.keymap.set({ 'n', 'v' }, 'i', 'l', { silent = true, noremap = false })
 
 -- search forward / backwards
-vim.keymap.set('n', '=', 'n', { silent = true })
-vim.keymap.set('n', '-', 'N', { silent = true })
+-- vim.keymap.set('n', '=', 'n', { silent = true })
+-- vim.keymap.set('n', '-', 'N', { silent = true })
 
 -- go to start of the lines
-vim.keymap.set('', 'N', '0', { silent = true })
 -- go to end of the lines
-vim.keymap.set('', 'I', '$', { silent = true })
-vim.keymap.set('i', '<C-a>', '<ESC>A', { silent = true })
-vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', { silent = true })
+-- vim.keymap.set('i', '<C-a>', '<ESC>A', { silent = true })
+-- vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', { silent = true })
 
 -- set h (same as n, cursor left) to 'end of word'
-vim.keymap.set('', 'h', 'e', { silent = true })
+-- vim.keymap.set('', 'h', 'e', { silent = true })
 
 -- move viewport
-vim.keymap.set('n', '<C-u>', '10<C-y>', { silent = true })
-vim.keymap.set('n', '<C-e>', '10<C-e>', { silent = true })
+-- vim.keymap.set('n', '<C-u>', '10<C-y>', { silent = true })
+-- vim.keymap.set('n', '<C-e>', '10<C-e>', { silent = true })
 
 -- Custom cursor movement
 vim.cmd 'source $HOME/.config/nvim/cursor.vim'
@@ -220,19 +220,34 @@ vim.cmd 'source $HOME/.config/nvim/cursor.vim'
 -- inoremap <C-a> <ESC>A
 
 -- exec "nohlsearch"
-vim.keymap.set('n', '<Esc>', ':nohlsearch<CR>', { noremap = true })
+-- vim.keymap.set('n', '<Esc>', ':nohlsearch<CR>', { noremap = true })
 
 -- Open the vimrc file anytime
-vim.keymap.set('n', '<leader>rc', ':e $HOME/.config/nvim/init.lua<CR>', { noremap = true })
-vim.keymap.set('n', '<leader>no', ':e $HOME/.config/nvim/notes.md<CR>', { noremap = true })
-vim.keymap.set('n', '<leader>km', ':e $HOME/.config/nvim/keymap.vim<CR>', { noremap = true })
+-- vim.keymap.set('n', '<leader>rc', ':e $HOME/.config/nvim/init.lua<CR>', { noremap = true })
+-- vim.keymap.set('n', '<leader>no', ':e $HOME/.config/nvim/notes.md<CR>', { noremap = true })
+-- vim.keymap.set('n', '<leader>km', ':e $HOME/.config/nvim/keymap.vim<CR>', { noremap = true })
 
 -- Avoid overriding content when pasting in visual mode
-vim.keymap.set('x', 'p', 'P', { noremap = true })
+-- vim.keymap.set('x', 'p', 'P', { noremap = true })
 -- xnoremap p P
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
+
+-- Custom function to handle <N> behavior: Go to leftmost character of the line of go to beginning
+-- of line if already at leftmost character
+local function custom_move_to_first_char_or_beginning()
+  local col = vim.fn.col '.'
+  local first_non_blank = vim.fn.col '^'
+  if col == first_non_blank then
+    vim.cmd 'normal! 0'
+  else
+    vim.cmd 'normal! ^'
+  end
+end
+
+-- Map <C-n> to the custom function
+vim.keymap.set('n', 'N', custom_move_to_first_char_or_beginning, { noremap = true, silent = true })
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
@@ -240,17 +255,17 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- ==================== Window management ===================================
 -- Resize with arrows
-vim.keymap.set('n', '<leader>w', '<C-w>v', { desc = 'Split window vertically' })
-vim.keymap.set('n', '<leader>u', '<C-w>k', { desc = 'Go to window up' })
-vim.keymap.set('n', '<leader>e', '<C-w>j', { desc = 'Go to window down' })
-vim.keymap.set('n', '<leader>i', '<C-w>l', { desc = 'Go to window right' })
-vim.keymap.set('n', '<leader>n', '<C-w>h', { desc = 'Go to window left' })
+-- vim.keymap.set('n', '<leader>w', '<C-w>v', { desc = 'Split window vertically' })
+-- vim.keymap.set('n', '<leader>u', '<C-w>k', { desc = 'Go to window up' })
+-- vim.keymap.set('n', '<leader>e', '<C-w>j', { desc = 'Go to window down' })
+-- vim.keymap.set('n', '<leader>i', '<C-w>l', { desc = 'Go to window right' })
+-- vim.keymap.set('n', '<leader>n', '<C-w>h', { desc = 'Go to window left' })
 
 -- Resize with arrows
-vim.keymap.set('n', '<up>', ':res +5<CR>', { desc = 'Increase window height' })
-vim.keymap.set('n', '<down>', ':res -5<CR>', { desc = 'Decrease window height' })
-vim.keymap.set('n', '<left>', ':vertical resize -5<CR>', { desc = 'Decrease window width' })
-vim.keymap.set('n', '<right>', ':vertical resize +5<CR>', { desc = 'Increase window width' })
+-- vim.keymap.set('n', '<up>', ':res +5<CR>', { desc = 'Increase window height' })
+-- vim.keymap.set('n', '<down>', ':res -5<CR>', { desc = 'Decrease window height' })
+-- vim.keymap.set('n', '<left>', ':vertical resize -5<CR>', { desc = 'Decrease window width' })
+-- vim.keymap.set('n', '<right>', ':vertical resize +5<CR>', { desc = 'Increase window width' })
 
 -- Diagnostic keymaps TODO review and uncomment
 -- vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
@@ -283,8 +298,8 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 
 -- ========================= Colemak keybindings =======================
 -- ---------------------------- basic mappings --------------------------
-vim.keymap.set('n', 'Q', ':q<CR>', { noremap = true })
-vim.keymap.set('n', 'S', ':w<CR>', { noremap = true })
+-- vim.keymap.set('n', 'Q', ':q<CR>', { noremap = true })
+-- vim.keymap.set('n', 'S', ':w<CR>', { noremap = true })
 --
 -- -- undo
 -- vim.keymap.set('n', 'l', 'u', { noremap = true })
@@ -298,10 +313,8 @@ vim.keymap.set('n', 'S', ':w<CR>', { noremap = true })
 vim.keymap.set('n', 'Tu', ':tabe<CR>', { noremap = true })
 vim.keymap.set('n', 'TU', ':tab split<CR>', { noremap = true })
 
-vim.keymap.set('', 'Tn', ':-tabnext<CR>', { noremap = true })
-vim.keymap.set('', 'Ti', ':+tabnext<CR>', { noremap = true })
-vim.keymap.set('t', 'Tn', ':-tabnext<CR>', { noremap = true })
-vim.keymap.set('t', 'Ti', ':+tabnext<CR>', { noremap = true })
+vim.keymap.set('', '<A-n>', ':-tabnext<CR>', { noremap = true })
+vim.keymap.set('', '<A-i>', ':+tabnext<CR>', { noremap = true })
 
 --
 -- -- ---------------------------- cursor movement -------------------------
@@ -336,6 +349,7 @@ vim.keymap.set({ 'n', 'v' }, 'i', 'l', { silent = true, remap = false })
 
 ------------------------------------------------------------------------
 vim.cmd 'source $HOME/.config/nvim/keymap.vim'
+vim.cmd 'source $HOME/.config/nvim/keymap_advanced.vim'
 -- =====================================================================
 
 -- [[ Basic Autocommands ]]
@@ -390,6 +404,66 @@ require('lazy').setup({
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
 
+  -- MARIO: Avante, for Cursor-like UI
+  {
+    'yetone/avante.nvim',
+    event = 'VeryLazy',
+    lazy = false,
+    version = false, -- set this if you want to always pull the latest change
+    opts = {
+      provider = 'copilot',
+      -- auto_suggestions_provider = 'copilot',
+      behaviour = {
+        -- auto_suggestions = true,
+      },
+    },
+    -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+    build = 'make',
+    -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      'stevearc/dressing.nvim',
+      'nvim-lua/plenary.nvim',
+      'MunifTanjim/nui.nvim',
+      --- The below dependencies are optional,
+      'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
+      'zbirenbaum/copilot.lua', -- for providers='copilot'
+      {
+        -- support for image pasting
+        'HakonHarnes/img-clip.nvim',
+        event = 'VeryLazy',
+        opts = {
+          -- recommended settings
+          default = {
+            embed_image_as_base64 = false,
+            prompt_for_file_name = false,
+            drag_and_drop = {
+              insert_mode = true,
+            },
+            -- required for Windows users
+            use_absolute_path = true,
+          },
+        },
+      },
+      {
+        -- Make sure to set this up properly if you have lazy=true
+        'MeanderingProgrammer/render-markdown.nvim',
+        opts = {
+          file_types = { 'markdown', 'Avante' },
+        },
+        ft = { 'markdown', 'Avante' },
+      },
+    },
+  },
+  --MARIO: Better tab management
+  {
+    'nanozuki/tabby.nvim',
+    -- event = 'VimEnter', -- if you want lazy load, see below
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    config = function()
+      -- configs...
+    end,
+  },
   -- MARIO: Help to close pairs
   {
     'windwp/nvim-autopairs',
@@ -476,6 +550,9 @@ require('lazy').setup({
     config = function()
       local null_ls = require 'null-ls'
       null_ls.setup {
+        file_types = {
+          'html',
+        },
         sources = {
           -- null_ls.builtins.formatting.clang_format,
           null_ls.builtins.formatting.prettier,
@@ -559,9 +636,9 @@ require('lazy').setup({
         vim.keymap.set('n', 'n', api.node.open.edit, opts 'Close')
         vim.keymap.del('n', '<C-e>', opts 'Open in place')
         vim.keymap.set('n', 'u', 'k', opts 'Move up')
-        vim.keymap.set('n', 'U', '5k', opts 'Move up 15')
+        vim.keymap.set('n', 'U', '7k', opts 'Move up 15')
         vim.keymap.set('n', 'e', 'j', opts 'Move down')
-        vim.keymap.set('n', 'E', '5j', opts 'Move down 15')
+        vim.keymap.set('n', 'E', '7j', opts 'Move down 15')
         vim.keymap.set('n', '?', api.tree.toggle_help, opts 'Help')
       end,
     },
@@ -685,6 +762,8 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
+          scroll_strategy = 'limit',
+          symbol_width = 120,
           vimgrep_arguments = {
             'rg',
             '--color=never',
@@ -696,11 +775,14 @@ require('lazy').setup({
             '--trim',
           },
           layout_config = {
-            height = 0.95,
-            width = 0.95,
+            horizontal = {
+              width = { padding = 0 },
+              height = { padding = 0 },
+            },
           },
+          file_ignore_patterns = { 'node_modules', '.git', '*.md', '*.proto' },
           -- Show relative paths instead of absolute paths
-          path_display = { 'smart' },
+          path_display = { 'truncate' },
           mappings = {
             i = {
               -- MARIO: Colemak bindings
@@ -762,6 +844,16 @@ require('lazy').setup({
           previewer = false,
         })
       end, { desc = '[?] Fuzzily search in current buffer' })
+
+      -- Fuzzy find all the symbols in your current document.
+      --  Symbols are things like variables, functions, types, etc.
+      vim.keymap.set('n', '<leader>cs', function()
+        builtin.lsp_document_symbols {
+          symbol_width = 80,
+          symbol_type_width = 20,
+          symbols = { 'function', 'method', 'struct' }, -- Add or remove symbol types as needed
+        }
+      end, { desc = '[C]ode [S]ymbols' })
 
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
@@ -876,10 +968,6 @@ require('lazy').setup({
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
           map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
-
-          -- Fuzzy find all the symbols in your current document.
-          --  Symbols are things like variables, functions, types, etc.
-          map('<leader>cs', require('telescope.builtin').lsp_document_symbols, '[C]ode [S]ymbols')
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
@@ -1249,7 +1337,6 @@ require('lazy').setup({
         -- Show box drawing characters for the tree hierarchy
         show_guides = true,
       }
-      vim.keymap.set('n', '<leader>aa', ':AerialToggle<CR>', { silent = true, desc = 'Toggle Aerial' }) -- Aerial
     end,
   },
 
@@ -1475,8 +1562,6 @@ require('lazy').setup({
 -- MARIO: Copilot -----------------------------------------------------------------------------------
 vim.g.copilot_enabled = 1
 vim.keymap.set('n', '<leader>co', ':Copilot<CR>', { silent = true, desc = 'Open Copilot' })
-vim.keymap.set('n', '<leader>ce', ':Copilot enable<CR>', { silent = true, desc = 'Enable Copilot' })
-vim.keymap.set('n', '<leader>cd', ':Copilot disable<CR>', { silent = true, desc = 'Disable Copilot' })
 vim.keymap.set('i', '<c-i>', '<Plug>(copilot-next)', { silent = true, desc = 'Next suggestion' })
 vim.keymap.set('i', '<C-o>', 'copilot#Accept("\\<CR>")', {
   expr = true,
@@ -1484,6 +1569,7 @@ vim.keymap.set('i', '<C-o>', 'copilot#Accept("\\<CR>")', {
 })
 vim.g.copilot_no_tab_map = true -- Disable tab mapping
 vim.keymap.set('i', '<C-p>', '<Plug>(copilot-suggest)', { silent = true, expr = true, desc = 'Suggest' })
+
 -----------------------------------------------------------------------------------------------------------
 
 -- MARIO: Jump in code (hop) ------------------------------------------------------------------------------
@@ -1539,7 +1625,7 @@ vim.g.zig_fmt_autosave = 0
 ----------------------------------------------------------------------------------------------------------
 
 -- MARIO: other keybindings
-vim.keymap.set('n', '<leader>aa', ':AerialToggle<CR>', { silent = true, desc = 'Toggle Aerial' }) -- Aerial
+vim.keymap.set('n', '<leader>ae', ':AerialToggle<CR>', { silent = true, desc = 'Toggle Aerial' }) -- Aerial
 vim.keymap.set('n', '<leader>nn', ':NvimTreeToggle<CR>', { silent = true, desc = 'Toggle NvimTree' }) -- NvimTree
 vim.keymap.set('n', '<leader>todo', ':TodoTelescope<CR>', { silent = true, desc = 'Search TODOs' }) -- Todo Telescope
 
@@ -1589,9 +1675,129 @@ vim.keymap.set('n', '<space>E', vim.diagnostic.open_float, { noremap = true, sil
 --}
 
 -- MARIO go to GH line
--- for repository page
-vim.api.nvim_set_keymap('n', '<Leader>gr', ':OpenInGHRepo <CR>', { silent = true, noremap = true })
-
--- for current file page
 vim.api.nvim_set_keymap('n', '<Leader>gf', ':OpenInGHFile <CR>', { silent = true, noremap = true })
 vim.api.nvim_set_keymap('v', '<Leader>gf', ':OpenInGHFileLines <CR>', { silent = true, noremap = true })
+
+-- MARIO Avante
+-- deps:
+require('img-clip').setup {
+  -- use recommended settings from above
+}
+require('copilot').setup {
+  -- use recommended settings from above
+}
+require('render-markdown').setup {
+  -- use recommended settings from above
+}
+require('avante_lib').load()
+
+vim.api.nvim_set_keymap('v', '<Leader>av', ':AvanteAsk <CR>', { silent = true, noremap = true, desc = 'Ask Avante' })
+
+require('avante').setup {
+  ---@alias Provider "claude" | "openai" | "azure" | "gemini" | "cohere" | "copilot" | string
+  provider = 'copilot', -- Recommend using Claude
+  auto_suggestions_provider = 'claude', -- Since auto-suggestions are a high-frequency operation and therefore expensive, it is recommended to specify an inexpensive provider or even a free provider: copilot
+  behaviour = {
+    auto_suggestions = false, -- Experimental stage
+    auto_set_highlight_group = true,
+    auto_set_keymaps = true,
+    auto_apply_diff_after_generation = false,
+    support_paste_from_clipboard = false,
+  },
+  mappings = {
+    --- @class AvanteConflictMappings
+    diff = {
+      ours = 'co',
+      theirs = 'ct',
+      all_theirs = 'ca',
+      both = 'cb',
+      cursor = 'cc',
+      next = ']x',
+      prev = '[x',
+    },
+    suggestion = {
+      accept = '<M-l>',
+      next = '<M-]>',
+      prev = '<M-[>',
+      dismiss = '<C-]>',
+    },
+    jump = {
+      next = ']]',
+      prev = '[[',
+    },
+    submit = {
+      normal = '<CR>',
+      insert = '<C-s>',
+    },
+    sidebar = {
+      switch_windows = '<Tab>',
+      reverse_switch_windows = '<S-Tab>',
+    },
+  },
+  hints = { enabled = true },
+  windows = {
+    ---@type "right" | "left" | "top" | "bottom"
+    position = 'right', -- the position of the sidebar
+    wrap = true, -- similar to vim.o.wrap
+    width = 30, -- default % based on available width
+    sidebar_header = {
+      align = 'center', -- left, center, right for title
+      rounded = true,
+    },
+  },
+  highlights = {
+    ---@type AvanteConflictHighlights
+    diff = {
+      current = 'DiffText',
+      incoming = 'DiffAdd',
+    },
+  },
+  --- @class AvanteConflictUserConfig
+  diff = {
+    autojump = true,
+    ---@type string | fun(): any
+    list_opener = 'copen',
+  },
+}
+
+-- MARIO: Send buffer contents to an API endpoint
+local function send_buffer_contents()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local content = table.concat(lines, '\n')
+
+  -- Create a temporary file to store the buffer contents
+  local tmp_file = vim.fn.tempname()
+  local file = io.open(tmp_file, 'w')
+  if file then
+    file:write(content)
+    file:close()
+  else
+    print 'Failed to create temporary file'
+    return
+  end
+
+  -- Construct the curl command using the temporary file
+  local cmd = string.format("curl -X POST -H 'Content-Type: text/plain' --data-binary @%s localhost:8090/code", vim.fn.shellescape(tmp_file))
+
+  -- Execute the curl command
+  vim.fn.jobstart(cmd, {
+    on_exit = function(_, exit_code)
+      -- Remove the temporary file
+      os.remove(tmp_file)
+
+      if exit_code == 0 then
+        print 'Buffer contents sent successfully'
+      else
+        print 'Failed to send buffer contents'
+      end
+    end,
+  })
+end
+
+vim.api.nvim_create_autocmd('BufWritePost', {
+  pattern = { '~/projects/prototypes', '*.json' },
+  callback = function()
+    send_buffer_contents()
+  end,
+})
