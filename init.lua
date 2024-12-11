@@ -78,11 +78,13 @@ Kickstart Guide:
 
 If you experience any errors while trying to install kickstart, run `:checkhealth` for more info.
 
-I hope you enjoy your Neovim journey,
-- TJ
-
-P.S. You can delete this when you're done too. It's your config now! :)
 --]]
+
+-- Get the current working directory
+local cwd = vim.fn.getcwd()
+
+-- Print or use the cwd as needed
+vim.notify('Neovim started from: ' .. cwd)
 
 -- Set <space> as the leader key
 -- See `:help mapleader`
@@ -126,7 +128,8 @@ vim.o.showtabline = 2
 vim.opt.sessionoptions = 'curdir,folds,globals,help,tabpages,terminal,winsize'
 
 -- Save undo history
-vim.opt.undofile = true
+vim.opt.undofile = false
+vim.opt.undodir = '$XDG_STATE_HOME/nvim/undo/'
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.opt.ignorecase = true
@@ -313,8 +316,10 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', 'Tu', ':tabe<CR>', { noremap = true })
 vim.keymap.set('n', 'TU', ':tab split<CR>', { noremap = true })
 
-vim.keymap.set('', '<A-n>', ':-tabnext<CR>', { noremap = true })
-vim.keymap.set('', '<A-i>', ':+tabnext<CR>', { noremap = true })
+-- vim.keymap.set('', '<A-n>', ':-tabnext<CR>', { noremap = true })
+-- vim.keymap.set('', '<A-i>', ':+tabnext<CR>', { noremap = true })
+vim.keymap.set('', '<A-n>', ':BufferPrevious<CR>', { noremap = true })
+vim.keymap.set('', '<A-i>', ':BufferNext<CR>', { noremap = true })
 
 --
 -- -- ---------------------------- cursor movement -------------------------
@@ -351,6 +356,8 @@ vim.keymap.set({ 'n', 'v' }, 'i', 'l', { silent = true, remap = false })
 vim.cmd 'source $HOME/.config/nvim/keymap.vim'
 vim.cmd 'source $HOME/.config/nvim/keymap_advanced.vim'
 -- =====================================================================
+vim.keymap.set('', 'Q', ':BufferClose<CR>', { noremap = true })
+vim.keymap.set('', '<C-A-q?', ':qall<CR>', { noremap = true })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -404,6 +411,33 @@ require('lazy').setup({
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
 
+  -- MARIO: Persistence between sessions
+  {
+    'olimorris/persisted.nvim',
+    lazy = false, -- make sure the plugin is always loaded at startup
+    config = true,
+  },
+
+  -- MARIO: Tab management
+  {
+    'romgrk/barbar.nvim',
+    commit = '5c0abe2331837dcd3830f7429ddb9b8340c9fa93',
+    branch = 'master',
+    dependencies = {
+      'nvim-tree/nvim-web-devicons', -- OPTIONAL: for file icons
+    },
+    init = function()
+      vim.g.barbar_auto_setup = false
+    end,
+    opts = {
+      -- lazy.nvim will automatically call setup for you. put your options here, anything missing will use the default:
+      -- animation = true,
+      -- insert_at_start = true,
+      -- …etc.
+    },
+    -- version = '^1.9.0', -- optional: only update when a new 1.x version is released
+  },
+
   -- MARIO: Avante, for Cursor-like UI
   {
     'yetone/avante.nvim',
@@ -455,6 +489,7 @@ require('lazy').setup({
       },
     },
   },
+
   --MARIO: Better tab management
   {
     'nanozuki/tabby.nvim',
@@ -558,7 +593,7 @@ require('lazy').setup({
           null_ls.builtins.formatting.prettier,
         },
       }
-      vim.keymap.set('n', '<leader>fm', vim.lsp.buf.format, {})
+      vim.keymap.set('n', '<leader>cf', vim.lsp.buf.format, {})
     end,
   },
 
@@ -631,14 +666,25 @@ require('lazy').setup({
         -- custom mappings
         vim.keymap.set('n', 'j', api.tree.change_root_to_parent, opts 'Up')
         vim.keymap.set('n', 'k', api.tree.change_root_to_node, opts 'CD')
+
         vim.keymap.set('n', '-', 'N', opts 'Nothing')
+
         vim.keymap.set('n', 'i', api.node.open.edit, opts 'Open')
         vim.keymap.set('n', 'n', api.node.open.edit, opts 'Close')
+
         vim.keymap.del('n', '<C-e>', opts 'Open in place')
+
+        vim.keymap.del('n', '<C-v>', opts 'Vsplit')
+        vim.keymap.set('n', 'I', api.node.open.vertical, opts 'Open in a vertical split')
+
+        vim.keymap.del('n', '<C-x>', opts 'Hsplit')
+        vim.keymap.set('n', 'E', api.node.open.horizontal, opts 'Open in a horizontal split')
+
         vim.keymap.set('n', 'u', 'k', opts 'Move up')
         vim.keymap.set('n', 'U', '7k', opts 'Move up 15')
         vim.keymap.set('n', 'e', 'j', opts 'Move down')
         vim.keymap.set('n', 'E', '7j', opts 'Move down 15')
+
         vim.keymap.set('n', '?', api.tree.toggle_help, opts 'Help')
       end,
     },
@@ -713,8 +759,7 @@ require('lazy').setup({
 
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
-    event = 'VimEnter',
-    branch = '0.1.x',
+    tag = '0.1.8',
     dependencies = {
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
@@ -722,7 +767,7 @@ require('lazy').setup({
 
         -- `build` is used to run some command when the plugin is installed/updated.
         -- This is only run then, not every time Neovim starts up.
-        build = 'make',
+        build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release',
 
         -- `cond` is a condition used to determine whether this plugin should be
         -- installed and loaded.
@@ -762,6 +807,18 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
+          file_ignore_patterns = {
+            '%.bazel',
+            '%.lock',
+            '%.work',
+            '%.work.sum',
+            '.git',
+            'bazel-bin',
+            'bazel-go-monorepo',
+            'bazel-out',
+            'bazel-testlogs',
+            'node_modules',
+          },
           scroll_strategy = 'limit',
           symbol_width = 120,
           vimgrep_arguments = {
@@ -772,7 +829,6 @@ require('lazy').setup({
             '--line-number',
             '--column',
             '--smart-case',
-            '--trim',
           },
           layout_config = {
             horizontal = {
@@ -780,7 +836,6 @@ require('lazy').setup({
               height = { padding = 0 },
             },
           },
-          file_ignore_patterns = { 'node_modules', '.git', '*.md', '*.proto' },
           -- Show relative paths instead of absolute paths
           path_display = { 'truncate' },
           mappings = {
@@ -800,8 +855,19 @@ require('lazy').setup({
             },
           },
         },
-        -- pickers = {}
+        pickers = {
+          live_grep = {
+            cmd = vim.fn.getcwd(),
+            additional_args = { '--hidden' },
+          },
+        },
         extensions = {
+          ['fzf'] = {
+            fuzzy = true, -- false will only do exact matching
+            override_generic_sorter = false, -- override the generic sorter
+            override_file_sorter = false, -- override the file sorter
+            case_mode = 'smart_case', -- or "ignore_case" or "respect_case"
+          },
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
@@ -821,16 +887,15 @@ require('lazy').setup({
       pcall(require('telescope').load_extension, 'ui-select')
       pcall(require('telescope').load_extension, 'mapper')
       pcall(require('telescope').load_extension, 'aerial')
+      pcall(require('telescope').load_extension 'persisted')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]elect Telescope' })
       vim.keymap.set('n', '<leader>sa', ':AerialNavOpen<CR>', { desc = '[A]erial' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = 'current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = 'by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = 'Recent Files ("." for repeat)' })
@@ -855,11 +920,19 @@ require('lazy').setup({
         }
       end, { desc = '[C]ode [S]ymbols' })
 
+      vim.keymap.set('n', '<leader>sf', function()
+        builtin.find_files { cwd = cwd }
+      end, { desc = '[F]iles' })
+
+      vim.keymap.set('n', '<leader>sg', function()
+        builtin.live_grep { cwd = cwd }
+      end, { desc = 'by [G]rep' })
+
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
       vim.keymap.set('n', '<leader>s/', function()
         builtin.live_grep {
-          grep_open_files = true,
+          grep_open_files = false,
           prompt_title = 'Live Grep in Open Files',
         }
       end, { desc = '[S]earch [/] in Open Files' })
@@ -883,6 +956,7 @@ require('lazy').setup({
             'clangd',
             'clang_format',
             'codelldb',
+            'omnisharp',
           },
         },
       }, -- NOTE: Must be loaded before dependants
@@ -1149,12 +1223,14 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        csharp = { 'csharpier' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'isort', 'black' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        json = { 'prettierd', 'prettier', stop_after_first = true },
       },
     },
   },
@@ -1284,11 +1360,11 @@ require('lazy').setup({
         -- your configuration comes here
         -- or leave it empty to use the default settings
         style = 'night', -- The theme comes in three styles, `storm`, `moon`, a darker variant `night` and `day`
-        transparent = true, -- Enable this to disable setting the background color
+        transparent = false, -- Enable this to disable setting the background color
         styles = {
           -- Style to be applied to different syntax groups
           -- Value is any valid attr-list value for `:help nvim_set_hl`
-          comments = { italic = true },
+          comments = { italic = true, fg = '#0d8a0b' },
           keywords = { italic = true },
           functions = {},
           variables = {},
@@ -1456,7 +1532,7 @@ require('lazy').setup({
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby', 'go' },
+        additional_vim_regex_highlighting = { 'ruby', 'go', 'csharp' },
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
@@ -1566,6 +1642,7 @@ vim.keymap.set('i', '<c-i>', '<Plug>(copilot-next)', { silent = true, desc = 'Ne
 vim.keymap.set('i', '<C-o>', 'copilot#Accept("\\<CR>")', {
   expr = true,
   replace_keycodes = false,
+  desc = 'Copilot Accept',
 })
 vim.g.copilot_no_tab_map = true -- Disable tab mapping
 vim.keymap.set('i', '<C-p>', '<Plug>(copilot-suggest)', { silent = true, expr = true, desc = 'Suggest' })
@@ -1575,11 +1652,13 @@ vim.keymap.set('i', '<C-p>', '<Plug>(copilot-suggest)', { silent = true, expr = 
 -- MARIO: Jump in code (hop) ------------------------------------------------------------------------------
 local hop = require 'hop'
 vim.keymap.set('', '<leader>h', function()
+  -- hop.hint_patterns { current_line_only = false }
   hop.hint_char2 { current_line_only = false }
-end, { remap = true, desc = '2 char hop' })
+end, { remap = true, desc = 'hint words' })
 
 vim.keymap.set('', 't', function()
-  hop.hint_char2 { current_line_only = false }
+  -- hop.hint_char2 { current_line_only = false }
+  hop.hint_patterns { current_line_only = false }
 end, { remap = true, desc = '2 char hop' })
 
 vim.keymap.set('', 'f', function()
@@ -1608,6 +1687,15 @@ nvim_lsp['gopls'].setup {
   capabilities = capabilities,
   settings = {
     gopls = {
+      env = {
+        GOPACKAGESDRIVER = '/home/mcastro/work/go-monorepo/gopackagesdriver.sh',
+      },
+      directoryFilters = {
+        '-bazel-bin',
+        '-bazel-out',
+        '-bazel-testlogs',
+        '-bazel-go-monorepo',
+      },
       experimentalPostfixCompletions = true,
       analyses = {
         unusedparams = true,
@@ -1617,25 +1705,41 @@ nvim_lsp['gopls'].setup {
     },
   },
 }
-----------------------------------------------------------------------------------------------------------
+--MARIO: C#  -------------------------------------------------------------------------------------------------------
+local pid = vim.fn.getpid()
+
+local on_attach_csharp = function(client, bufnr)
+  -- Enable completion triggered by <c-x><c-o>
+  vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+  -- Mappings
+  local bufopts = { noremap = true, silent = true, buffer = bufnr }
+  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+  vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
+  -- Add more keymaps as needed
+end
+
+nvim_lsp.omnisharp.setup {
+  cmd = { 'omnisharp', '--languageserver', '--hostPID', tostring(pid) },
+  -- Additional configuration options
+  on_attach = on_attach_csharp,
+  capabilities = capabilities,
+}
 
 --MARIO: Zig -------------------------------------------------------------------------------------------
 require('lspconfig').zls.setup {}
 vim.g.zig_fmt_autosave = 0
-----------------------------------------------------------------------------------------------------------
 
--- MARIO: other keybindings
-vim.keymap.set('n', '<leader>ae', ':AerialToggle<CR>', { silent = true, desc = 'Toggle Aerial' }) -- Aerial
-vim.keymap.set('n', '<leader>nn', ':NvimTreeToggle<CR>', { silent = true, desc = 'Toggle NvimTree' }) -- NvimTree
-vim.keymap.set('n', '<leader>todo', ':TodoTelescope<CR>', { silent = true, desc = 'Search TODOs' }) -- Todo Telescope
+-- MARIO: other keybindings -------------------------------------------------------------------------------------------------------
+vim.keymap.set('n', '<leader>ae', ':AerialToggle<CR>', { silent = true, desc = 'Toggle Aerial' })
+vim.keymap.set('n', '<leader>nn', ':NvimTreeToggle<CR>', { silent = true, desc = 'Toggle NvimTree' })
+vim.keymap.set('n', '<leader>todo', ':TodoTelescope<CR>', { silent = true, desc = 'Search TODOs' })
 
--- MARIO: Golang's debugger
+-- MARIO: Golang's debugger -------------------------------------------------------------------------------------------------------
 vim.api.nvim_set_keymap('n', '<C-t>', ':GoTestFile<CR>', { silent = true })
 vim.api.nvim_set_keymap('n', '<C-S-D>', ':DlvTestCurrent<CR>', { silent = true })
 vim.api.nvim_set_keymap('n', '<C-S-B>', ':DlvToggleBreakpoint<CR>', { silent = true })
-
--- MARIO: Terminal
-vim.api.nvim_set_keymap('n', '<leader>te', ':ToggleTerm<CR>', { silent = true })
 
 local dap = require 'dap'
 dap.configurations.cpp = {
@@ -1644,7 +1748,6 @@ dap.configurations.cpp = {
     type = 'gdb',
     request = 'launch',
     program = function()
-      -- return vim.fn.getcwd() .. '/build/main'
       return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/test_main', 'file')
     end,
     cwd = '${workspaceFolder}',
@@ -1657,7 +1760,7 @@ dap.adapters.gdb = {
   args = { '-i', 'dap' },
 }
 
--- MARIO: Binding to show error messages
+-- MARIO: Binding to show error messages -------------------------------------------------------------------------------------------------------
 vim.keymap.set('n', '<space>E', vim.diagnostic.open_float, { noremap = true, silent = true })
 -- require('dap-go').setup {
 --   external_config = {
@@ -1674,11 +1777,11 @@ vim.keymap.set('n', '<space>E', vim.diagnostic.open_float, { noremap = true, sil
 --   },
 --}
 
--- MARIO go to GH line
+-- MARIO go to GH line -------------------------------------------------------------------------------------------------------
 vim.api.nvim_set_keymap('n', '<Leader>gf', ':OpenInGHFile <CR>', { silent = true, noremap = true })
 vim.api.nvim_set_keymap('v', '<Leader>gf', ':OpenInGHFileLines <CR>', { silent = true, noremap = true })
 
--- MARIO Avante
+-- MARIO Avante -------------------------------------------------------------------------------------------------------
 -- deps:
 require('img-clip').setup {
   -- use recommended settings from above
@@ -1760,7 +1863,7 @@ require('avante').setup {
   },
 }
 
--- MARIO: Send buffer contents to an API endpoint
+-- MARIO: Send buffer contents to an API endpoint -------------------------------------------------------------------------------------------------------
 local function send_buffer_contents()
   local bufnr = vim.api.nvim_get_current_buf()
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
@@ -1801,3 +1904,45 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     send_buffer_contents()
   end,
 })
+
+-- MARIO: Persistence sesssion management -------------------------------------------------------------------------------------------------------
+require('persisted').setup {
+  use_git_branch = true,
+  autostart = true,
+  autoload = true,
+}
+
+vim.api.nvim_set_keymap('n', '<Leader>,s', ':SessionSave <CR>', { silent = true, noremap = true, desc = 'SessionSave' })
+vim.api.nvim_set_keymap('n', '<Leader>,l', ':SessionLoad <CR>', { silent = true, noremap = true, desc = 'SessionSave' })
+vim.api.nvim_set_keymap('n', '<Leader>,t', ':Telescope persisted <CR>', { silent = true, noremap = true, desc = 'Telescope persisted' })
+
+-- MARIO: Disable auto-commenting next lines -------------------------------------------------------------------------------------------------------
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*',
+  callback = function()
+    vim.opt_local.formatoptions:remove { 'r', 'o' }
+  end,
+})
+
+-- MARIO: Godot LSP ------------------------------------------------------------------------------------------------------
+require('lspconfig')['gdscript'].setup {
+  name = 'godot',
+  cmd = vim.lsp.rpc.connect('127.0.0.1', '6005'),
+}
+
+local dap = require 'dap'
+dap.adapters.godot = {
+  type = 'server',
+  host = '127.0.0.1',
+  port = 6006,
+}
+
+dap.configurations.gdscript = {
+  {
+    type = 'godot',
+    request = 'launch',
+    name = 'Launch scene',
+    project = '${workspaceFolder}',
+    launch_scene = true,
+  },
+}

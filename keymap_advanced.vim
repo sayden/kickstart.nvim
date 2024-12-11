@@ -46,10 +46,6 @@ set inccommand=split
 set completeopt=longest,noinsert,menuone,noselect,preview
 set lazyredraw
 set visualbell
-if has('persistent_undo')
-    set undofile
-    set undodir=$HOME/.config/nvim/tmp/undo,.
-endif
 set updatetime=100
 set virtualedit=block
 
