@@ -82,6 +82,10 @@ If you experience any errors while trying to install kickstart, run `:checkhealt
 
 -- Get the current working directory
 local cwd = vim.fn.getcwd()
+vim.opt.title = true
+vim.g.initial_cwd = cwd
+vim.opt.titlestring = [[%{fnamemodify(g:initial_cwd, ':t')} - %f - Neovim %h%m%r%w]]
+-- vim.opt.titlestring = [[%{fnamemodify(getcwd(), ':t')} - %f %h%m%r%w]]
 
 -- Print or use the cwd as needed
 vim.notify('Neovim started from: ' .. cwd)
@@ -210,10 +214,6 @@ vim.opt.updatetime = 100
 
 -- set h (same as n, cursor left) to 'end of word'
 -- vim.keymap.set('', 'h', 'e', { silent = true })
-
--- move viewport
--- vim.keymap.set('n', '<C-u>', '10<C-y>', { silent = true })
--- vim.keymap.set('n', '<C-e>', '10<C-e>', { silent = true })
 
 -- Custom cursor movement
 vim.cmd 'source $HOME/.config/nvim/cursor.vim'
@@ -348,13 +348,11 @@ vim.keymap.set({ 'n', 'v' }, 'i', 'l', { silent = true, remap = false })
 -- -- set h (same as n, cursor left) to 'end of word'
 -- vim.keymap.set('', 'h', 'e', { silent = false })
 --
--- -- move viewport
--- vim.keymap.set('n', '<C-u>', '10<C-y>', { silent = false })
--- vim.keymap.set('n', '<C-e>', '10<C-e>', { silent = false })
 
 ------------------------------------------------------------------------
 vim.cmd 'source $HOME/.config/nvim/keymap.vim'
 vim.cmd 'source $HOME/.config/nvim/keymap_advanced.vim'
+
 -- =====================================================================
 vim.keymap.set('', 'Q', ':BufferClose<CR>', { noremap = true })
 vim.keymap.set('', '<C-A-q?', ':qall<CR>', { noremap = true })
@@ -411,12 +409,40 @@ require('lazy').setup({
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
 
+  -- MARIO: Macros
+  {
+    'kr40/nvim-macros',
+    cmd = { 'MacroSave', 'MacroYank', 'MacroSelect', 'MacroDelete' },
+    opts = {
+
+      json_file_path = vim.fs.normalize(vim.fn.stdpath 'config' .. '/macros.json'), -- Location where the macros will be stored
+      default_macro_register = 'q', -- Use as default register for :MacroYank and :MacroSave and :MacroSelect Raw functions
+      json_formatter = 'none', -- can be "none" | "jq" | "yq" used to pretty print the json file (jq or yq must be installed!)
+    },
+  },
+
+  -- MARIO: ActivityWatch
+  {
+    'lowitea/aw-watcher.nvim',
+    opts = { -- required, but can be empty table: {}
+      -- add any options here
+      -- for example:
+      aw_server = {
+        host = '127.0.0.1',
+        port = 5600,
+      },
+    },
+  },
+
   -- MARIO: Persistence between sessions
   {
     'olimorris/persisted.nvim',
     lazy = false, -- make sure the plugin is always loaded at startup
     config = true,
   },
+
+  -- MARIO: Smooth scrolling
+  -- { 'karb94/neoscroll.nvim' },
 
   -- MARIO: Tab management
   {
@@ -587,16 +613,16 @@ require('lazy').setup({
       null_ls.setup {
         file_types = {
           'html',
+          'cs',
         },
         sources = {
-          -- null_ls.builtins.formatting.clang_format,
+          null_ls.builtins.formatting.clang_format,
           null_ls.builtins.formatting.prettier,
         },
       }
       vim.keymap.set('n', '<leader>cf', vim.lsp.buf.format, {})
     end,
   },
-
   'mfussenegger/nvim-dap',
 
   -- MARIO: helps with pairing quotes, brackets, etc
@@ -640,6 +666,9 @@ require('lazy').setup({
   {
     'nvim-tree/nvim-tree.lua',
     opts = {
+      filters = {
+        custom = { 'node_modules', '.git/', '.cache', '.uid', 'go.sum', 'project.godot', '.import' },
+      },
       view = {
         adaptive_size = true,
       },
@@ -675,7 +704,7 @@ require('lazy').setup({
         vim.keymap.del('n', '<C-e>', opts 'Open in place')
 
         vim.keymap.del('n', '<C-v>', opts 'Vsplit')
-        vim.keymap.set('n', 'I', api.node.open.vertical, opts 'Open in a vertical split')
+        vim.keymap.set('n', '<C-I>', api.node.open.vertical, opts 'Open in a vertical split')
 
         vim.keymap.del('n', '<C-x>', opts 'Hsplit')
         vim.keymap.set('n', 'E', api.node.open.horizontal, opts 'Open in a horizontal split')
@@ -818,6 +847,15 @@ require('lazy').setup({
             'bazel-out',
             'bazel-testlogs',
             'node_modules',
+            '%.svg',
+            'addons',
+            '%.uid',
+            '%.tscn',
+            'go.sum',
+            'project.godot',
+            '%.jpg',
+            '%.png',
+            '%.uid',
           },
           scroll_strategy = 'limit',
           symbol_width = 120,
@@ -922,10 +960,18 @@ require('lazy').setup({
 
       vim.keymap.set('n', '<leader>sf', function()
         builtin.find_files { cwd = cwd }
-      end, { desc = '[F]iles' })
+      end, { desc = '[f]iles' })
+
+      vim.keymap.set('n', '<leader>sF', function()
+        builtin.find_files { cwd = vim.fn.getcwd() }
+      end, { desc = '[F]iles in current folder' })
 
       vim.keymap.set('n', '<leader>sg', function()
         builtin.live_grep { cwd = cwd }
+      end, { desc = 'by [G]rep' })
+
+      vim.keymap.set('n', '<leader>sG', function()
+        builtin.live_grep { cwd = vim.fn.getcwd() }
       end, { desc = 'by [G]rep' })
 
       -- It's also possible to pass additional configuration options.
@@ -956,7 +1002,7 @@ require('lazy').setup({
             'clangd',
             'clang_format',
             'codelldb',
-            'omnisharp',
+            'omnisharp-mono',
           },
         },
       }, -- NOTE: Must be loaded before dependants
@@ -1069,20 +1115,20 @@ require('lazy').setup({
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client.server_capabilities.documentHighlightProvider then
-            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
-            vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.document_highlight,
-            })
-
-            vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.clear_references,
-            })
-          end
+          -- if client and client.server_capabilities.documentHighlightProvider then
+          --   local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+          --   vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+          --     buffer = event.buf,
+          --     group = highlight_augroup,
+          --     callback = vim.lsp.buf.document_highlight,
+          --   })
+          --
+          --   vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+          --     buffer = event.buf,
+          --     group = highlight_augroup,
+          --     callback = vim.lsp.buf.clear_references,
+          --   })
+          -- end
 
           -- The following autocommand is used to enable inlay hints in your
           -- code, if the language server you are using supports them
@@ -1100,7 +1146,7 @@ require('lazy').setup({
         group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
         callback = function(event)
           vim.lsp.buf.clear_references()
-          vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event.buf }
+          -- vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event.buf }
         end,
       })
       vim.api.nvim_create_autocmd('FileType', {
@@ -1215,7 +1261,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = { c = true, cpp = true, proto = true }
         return {
           timeout_ms = 500,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
@@ -1223,7 +1269,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        csharp = { 'csharpier' },
+        csharp = { 'clang-format' },
         -- Conform can also run multiple formatters sequentially
         python = { 'isort', 'black' },
         --
@@ -1567,7 +1613,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -1602,38 +1648,6 @@ require('lazy').setup({
 --
 --
 -- MARIO: Plugins that require initialization after setup
--- vim.g.loaded_netrw = 1 -- Disable netrw
--- vim.g.loaded_netrwPlugin = 1 -- Disable netrw
--- -- optionally enable 24-bit colour
--- vim.opt.termguicolors = true
---
--- local function on_attach_nvim_tree(bufnr)
---   -- custom mappings
---   local api = require 'nvim-tree.api'
---
---   local function opts(desc)
---     return { desc = 'nvim-tree: ' .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
---   end
---
---   -- default mappings DO NOT add default mappings or they'll override the ones from colemak
---   api.config.mappings.default_on_attach(bufnr)
---
---   -- custom mappings
---   vim.keymap.set('n', 'l', api.tree.change_root_to_parent, opts 'Up')
---   vim.keymap.set('n', 'k', api.tree.change_root_to_node, opts 'CD')
---   vim.keymap.set('n', '-', 'N', opts 'Nothing')
---   vim.keymap.set('n', '<C-y>', api.node.open.replace_tree_buffer, opts 'Open in place')
---   vim.keymap.set('n', 'i', api.node.open.edit, opts 'Open')
---   vim.keymap.set('n', 'n', api.node.open.edit, opts 'Close')
---   vim.keymap.set('n', 'u', 'k', opts 'Move up')
---   vim.keymap.set('n', 'e', 'j', opts 'Move down')
---   vim.keymap.set('n', '?', api.tree.toggle_help, opts 'Help')
--- end
--- --
--- -- empty setup using defaults
--- require('nvim-tree').setup {
---   on_attach = on_attach_nvim_tree,
--- }
 
 -- MARIO: Copilot -----------------------------------------------------------------------------------
 vim.g.copilot_enabled = 1
@@ -1667,7 +1681,6 @@ end, { remap = true, desc = '1 char line hop' })
 vim.keymap.set('', 'F', function()
   hop.hint_char1 { current_line_only = true }
 end, { remap = true, desc = '1 char line hop' })
-----------------------------------------------------------------------------------------------------------
 
 -- MARIO: Golang ----------------------------------------------------------------------------------------
 local format_sync_grp = vim.api.nvim_create_augroup('GoImport', {})
@@ -1681,29 +1694,41 @@ vim.api.nvim_create_autocmd('BufWritePre', {
 
 local nvim_lsp = require 'lspconfig'
 local capabilities = require('cmp_nvim_lsp').default_capabilities() --nvim-cmp
+local function is_bazel_project()
+  local bazel_files = { 'WORKSPACE', 'BUILD.bazel', 'BUILD' }
+  for _, file in ipairs(bazel_files) do
+    if vim.fn.glob(file) ~= '' then
+      return true
+    end
+  end
+  return false
+end
+
+local gopls_settings = {
+  gopls = {
+    experimentalPostfixCompletions = true,
+    analyses = {
+      unusedparams = true,
+    },
+    staticcheck = true,
+  },
+}
+
+if is_bazel_project() then
+  -- gopls_settings.gopls.env = { GOPACKAGESDRIVER = '/home/mcastro/work/go-monorepo/gopackagesdriver.sh' }
+  -- gopls_settings.gopls.directoryFilters = {
+  --   '-bazel-bin',
+  --   '-bazel-out',
+  --   '-bazel-testlogs',
+  -- }
+  return false
+end
+
 nvim_lsp['gopls'].setup {
   cmd = { 'gopls' },
   -- on_attach = on_attach,
-  capabilities = capabilities,
-  settings = {
-    gopls = {
-      env = {
-        GOPACKAGESDRIVER = '/home/mcastro/work/go-monorepo/gopackagesdriver.sh',
-      },
-      directoryFilters = {
-        '-bazel-bin',
-        '-bazel-out',
-        '-bazel-testlogs',
-        '-bazel-go-monorepo',
-      },
-      experimentalPostfixCompletions = true,
-      analyses = {
-        unusedparams = true,
-        shadow = true,
-      },
-      staticcheck = true,
-    },
-  },
+  -- capabilities = capabilities,
+  settings = gopls_settings,
 }
 --MARIO: C#  -------------------------------------------------------------------------------------------------------
 local pid = vim.fn.getpid()
@@ -1721,10 +1746,10 @@ local on_attach_csharp = function(client, bufnr)
 end
 
 nvim_lsp.omnisharp.setup {
-  cmd = { 'omnisharp', '--languageserver', '--hostPID', tostring(pid) },
+  cmd = { 'omnisharp-mono', '--languageserver', '--hostPID', tostring(pid) },
   -- Additional configuration options
   on_attach = on_attach_csharp,
-  capabilities = capabilities,
+  -- capabilities = capabilities,
 }
 
 --MARIO: Zig -------------------------------------------------------------------------------------------
@@ -1906,15 +1931,15 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 })
 
 -- MARIO: Persistence sesssion management -------------------------------------------------------------------------------------------------------
-require('persisted').setup {
-  use_git_branch = true,
-  autostart = true,
-  autoload = true,
-}
-
-vim.api.nvim_set_keymap('n', '<Leader>,s', ':SessionSave <CR>', { silent = true, noremap = true, desc = 'SessionSave' })
-vim.api.nvim_set_keymap('n', '<Leader>,l', ':SessionLoad <CR>', { silent = true, noremap = true, desc = 'SessionSave' })
-vim.api.nvim_set_keymap('n', '<Leader>,t', ':Telescope persisted <CR>', { silent = true, noremap = true, desc = 'Telescope persisted' })
+-- require('persisted').setup {
+--   use_git_branch = true,
+--   autostart = true,
+--   autoload = true,
+-- }
+--
+-- vim.api.nvim_set_keymap('n', '<Leader>,s', ':SessionSave <CR>', { silent = true, noremap = true, desc = 'SessionSave' })
+-- vim.api.nvim_set_keymap('n', '<Leader>,l', ':SessionLoad <CR>', { silent = true, noremap = true, desc = 'SessionSave' })
+-- vim.api.nvim_set_keymap('n', '<Leader>,t', ':Telescope persisted <CR>', { silent = true, noremap = true, desc = 'Telescope persisted' })
 
 -- MARIO: Disable auto-commenting next lines -------------------------------------------------------------------------------------------------------
 vim.api.nvim_create_autocmd('FileType', {
@@ -1927,10 +1952,9 @@ vim.api.nvim_create_autocmd('FileType', {
 -- MARIO: Godot LSP ------------------------------------------------------------------------------------------------------
 require('lspconfig')['gdscript'].setup {
   name = 'godot',
-  cmd = vim.lsp.rpc.connect('127.0.0.1', '6005'),
+  cmd = vim.lsp.rpc.connect('127.0.0.1', 6005),
 }
 
-local dap = require 'dap'
 dap.adapters.godot = {
   type = 'server',
   host = '127.0.0.1',
@@ -1946,3 +1970,29 @@ dap.configurations.gdscript = {
     launch_scene = true,
   },
 }
+
+-- MARIO: Macros ----------------------------------------------------------------------------------------
+vim.api.nvim_set_keymap('n', '<Leader>ms', ':MacroSave<CR>', { silent = true, noremap = true, desc = 'Save Macro' })
+vim.api.nvim_set_keymap('n', '<Leader>mm', ':MacroSelect<CR>', { silent = true, noremap = true, desc = 'Macro Menu' })
+
+---MARIO: Smooth Scrolling ------------------------------------------------------------------------------
+-- Neoscroll = require 'neoscroll'
+-- Neoscroll.setup {}
+-- local keymap = {
+--   ['<C-u>'] = function()
+--     Neoscroll.ctrl_y { duration = 250 }
+--   end,
+--   ['<C-e>'] = function()
+--     Neoscroll.ctrl_e { duration = 250 }
+--   end,
+-- }
+-- local modes = { 'n', 'v', 'x' }
+-- for key, func in pairs(keymap) do
+--   vim.keymap.set(modes, key, func)
+-- end
+
+-- =====================================================================
+
+-- -- move viewport
+-- vim.keymap.set('n', '<C-u>', '10<C-y>', { silent = false })
+-- vim.keymap.set('n', '<C-e>', '10<C-e>', { silent = false })

@@ -1,0 +1,1 @@
+{"macros": [{"name": "iferr", "raw": "awlpZiBlcnIgIT0gbmlsIHsgZYBrYnJldHVybiBlcnIgfQ0b", "content": "k<Tab>if<Space>err<Space>!=<Space>nil<Space>{<Space>e<BS>return<Space>err<Space>}<CR><Esc>"}]}
