@@ -20,9 +20,8 @@ set secure " Disable shell commands in vim"
 set number " Show line numbers"
 set relativenumber " Show relative line numbers"
 set noexpandtab " Use spaces instead of tabs"
-set tabstop=4
 set shiftwidth=2
-set softtabstop=2
+" set softtabstop=2
 set autoindent
 set list " Show invisible characters?
 set listchars=tab:\|\ ,trail:▫ " Show tabs and trailing spaces?

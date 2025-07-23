@@ -1,27 +1,26 @@
 " ==================== Basic Mappings ====================
-" let mapleader=" "
+let mapleader=" "
+
 noremap ; :
 noremap m ;
 " noremap ? /
 
-" Avoid overriding content when pasting in visual mode
 nnoremap Q :q<CR>
 nnoremap S :w<CR>
-
-" Open the vimrc file anytime
-nnoremap <LEADER>rc :e $HOME/.config/nvim/init.lua<CR>
-nnoremap <LEADER>ka :e $HOME/.config/nvim/keymap_advanced.vim<CR>
-nnoremap <LEADER>no :e $HOME/.config/nvim/notes.md<CR>
-nnoremap <LEADER>km :e $HOME/.config/nvim/keymap.vim<CR>
 
 noremap l u
 
 " " Insert Key
 noremap k i
-noremap K I
+" noremap K I
 
 " " Copy to system clipboard
 vnoremap Y "+y
+
+" " Ctrl + U or E will move up/down the view port without moving the cursor
+"unmap <C-U>
+" noremap <C-u> 20<C-y>
+"remap <C-e> <C-e>
 
 " ==================== Cursor Movement ====================
 " insert a pair of {} and go to the next line
@@ -33,33 +32,28 @@ vnoremap Y "+y
 "     e
 "     v
 noremap <silent> = n
-noremap <silent> - N
+noremap <silent> + N
 
 vnoremap <silent> n <c-i>
 vnoremap <silent> N <c-n>
-"
+
 noremap <silent> u k
 noremap <silent> n h
 noremap <silent> e j
 noremap <silent> i l
-" "
-" " " U/E keys for 5 times u/e (faster navigation)
-noremap <silent> U 5k
-noremap <silent> E 5j
 
-" " " N key: go to the start of the line
+" " " U/E keys for 5 times u/e (faster navigation)
+noremap <silent> U 8k
+noremap <silent> E 8j
+
+" " " N key: go to the start/end of the line
 noremap <silent> N ^
-" " " I key: go to the end of the line
-noremap <silent> I $
-" "
+noremap <silent> I g_
+
 " " set h (same as n, cursor left) to 'end of word'
 noremap h e
-"
-" " Ctrl + U or E will move up/down the view port without moving the cursor
-noremap <C-U> 15<C-y>
-noremap <C-E> 15<C-e>
 
-" ==================== Insert Mode Cursor Movement ==========================
+" Insert Mode, Cursor Movement
 inoremap <C-a> <ESC>A
 
 " ==================== Window management ===================================
@@ -69,4 +63,3 @@ noremap <LEADER>u <C-w>k
 noremap <LEADER>e <C-w>j
 noremap <LEADER>n <C-w>h
 noremap <LEADER>i <C-w>l
-

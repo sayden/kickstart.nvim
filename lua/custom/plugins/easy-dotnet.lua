@@ -1,0 +1,25 @@
+return -- lazy.nvim
+-- {
+--   'GustavEikaas/easy-dotnet.nvim',
+--   dependencies = { 'nvim-lua/plenary.nvim', 'nvim-telescope/telescope.nvim' },
+--   ft = { 'cs', 'csproj', 'sln', 'slnx', 'props', 'csx', 'targets' },
+--   cmd = 'Dotnet',
+--   config = function()
+--     require('easy-dotnet').setup {
+--       get_sdk_path = function()
+--         local sdk_version = vim.trim(vim.system({ 'dotnet', '--version' }):wait().stdout)
+--         local sdk_list = vim.trim(vim.system({ 'dotnet', '--list-sdks' }):wait().stdout)
+--         local base = nil
+--         for line in sdk_list:gmatch '[^\n]+' do
+--           if line:find(sdk_version, 1, true) then
+--             base = line:match '%[(.-)%]'
+--             break
+--           end
+--         end
+--         local sdk_path = vim.fs.joinpath(base, sdk_version)
+--         return sdk_path
+--       end,
+--     }
+--   end,
+-- }
+{}
