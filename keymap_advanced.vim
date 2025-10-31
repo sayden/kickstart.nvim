@@ -25,7 +25,7 @@ set shiftwidth=2
 set autoindent
 set list " Show invisible characters?
 set listchars=tab:\|\ ,trail:▫ " Show tabs and trailing spaces?
-set scrolloff=15 " Keep 15 lines above and below the cursor
+set scrolloff=10 " Keep 15 lines above and below the cursor
 set ttimeoutlen=0 " Disable timeout
 set notimeout
 set viewoptions=cursor,folds,slash,unix " Save view options

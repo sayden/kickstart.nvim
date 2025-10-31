@@ -18,7 +18,7 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     end
 
     -- Construct the curl command using the temporary file
-    local cmd = string.format("curl -X POST -H 'Content-Type: text/plain' --data-binary @%s localhost:8090/code", vim.fn.shellescape(tmp_file))
+    local cmd = string.format("curl -X POST -H 'Content-Type: text/plain' --data-binary @%s localhost:34115/api/code", vim.fn.shellescape(tmp_file))
 
     -- Execute the curl command
     vim.fn.jobstart(cmd, {

@@ -81,14 +81,14 @@ If you experience any errors while trying to install kickstart, run `:checkhealt
 --]]
 
 -- Get the current working directory
-local cwd = vim.fn.getcwd()
+vim.g.cwd = vim.fn.getcwd()
 vim.opt.title = true
-vim.g.initial_cwd = cwd
+vim.g.initial_cwd = vim.g.cwd
 vim.opt.titlestring = [[%{fnamemodify(g:initial_cwd, ':t')} - %f - Neovim %h%m%r%w]]
 -- vim.opt.titlestring = [[%{fnamemodify(getcwd(), ':t')} - %f %h%m%r%w]]
 
 -- Print or use the cwd as needed
-vim.notify('Neovim started from: ' .. cwd)
+vim.notify('Neovim started from: ' .. vim.g.cwd)
 
 -- Set <space> as the leader key
 -- See `:help mapleader`
@@ -548,3 +548,4 @@ require('lazy').setup({
 
 vim.api.nvim_exec_autocmds('FileType', {})
 vim.opt.textwidth = 100
+vim.cmd 'colorscheme cyberdream'

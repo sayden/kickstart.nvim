@@ -50,6 +50,7 @@ return { -- Fuzzy Finder (files, lsp, etc)
       --  All the info you're looking for is in `:help telescope.setup()`
       --
       defaults = {
+        debug = true,
         file_ignore_patterns = {
           'Godot.SourceGenerators',
           '%.lock',
@@ -90,6 +91,10 @@ return { -- Fuzzy Finder (files, lsp, etc)
           '--line-number',
           '--column',
           '--smart-case',
+          '--hidden',
+        },
+        preview = {
+          hide_on_startup = false,
         },
         layout_config = {
           horizontal = {
@@ -114,12 +119,6 @@ return { -- Fuzzy Finder (files, lsp, etc)
             ['<c-c>'] = 'close',
             ['<esc>'] = 'close',
           },
-        },
-      },
-      pickers = {
-        live_grep = {
-          cmd = vim.fn.getcwd(),
-          additional_args = { '--hidden' },
         },
       },
       extensions = {
@@ -155,9 +154,8 @@ return { -- Fuzzy Finder (files, lsp, etc)
     local builtin = require 'telescope.builtin'
     vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[H]elp' })
     vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[K]eymaps' })
-    vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]elect Telescope' })
+    -- vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]elect Telescope' })
     -- vim.keymap.set('n', '<leader>sa', ':AerialNavOpen<CR>', { desc = '[A]erial' })
-    vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = 'current [W]ord' })
     vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[D]iagnostics' })
     vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[R]esume' })
     vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = 'Recent Files ("." for repeat)' })
@@ -174,12 +172,19 @@ return { -- Fuzzy Finder (files, lsp, etc)
 
     -- Fuzzy find all the symbols in your current document.
     --  Symbols are things like variables, functions, types, etc.
-    --   builtin.lsp_document_symbols {
-    --     symbol_width = 80,
-    --     symbol_type_width = 20,
-    --     symbols = { 'function', 'method', 'struct' }, -- Add or remove symbol types as needed
-    --   }
-    -- end, { desc = '[C]ode [S]ymbols' })
+    vim.keymap.set('n', '<leader>cs', function()
+      builtin.lsp_document_symbols {
+        symbol_width = 80,
+        symbol_type_width = 20,
+        symbols = { 'function', 'method', 'struct' }, -- Add or remove symbol types as needed
+      }
+    end, { desc = '[C]ode [S]ymbols' })
+
+    vim.keymap.set('n', '<leader>sw', function()
+      builtin.grep_string {
+        cwd = vim.g.cwd,
+      }
+    end, { desc = 'current [W]ord' })
 
     vim.keymap.set('n', '<leader>sf', function()
       builtin.find_files { cwd = cwd }

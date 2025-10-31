@@ -92,10 +92,17 @@ return { -- LSP Configuration & Plugins
         -- Jump to the definition of the word under your cursor.
         --  This is where a variable was first declared, or where a function is defined, etc.
         --  To jump back, press <C-t>.
-        map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { desc = 'Go to definition' })
 
         -- Find references for the word under your cursor.
-        map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+        -- vim.keymap.set('n', 'gr', vim.lsp.buf.references, { desc = '[G]o to [R]eferences' })
+        -- map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+        vim.keymap.set('n', 'gr', require('telescope.builtin').lsp_references, {
+          desc = '[G]oto [R]eferences',
+          noremap = true,
+          silent = true,
+          nowait = true,
+        })
 
         map('gi', require('telescope.builtin').lsp_incoming_calls, '[G]oto incoming calls')
         map('go', require('telescope.builtin').lsp_outgoing_calls, '[G]oto outgoing calls')
@@ -194,16 +201,6 @@ return { -- LSP Configuration & Plugins
     --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
     local servers = {
       clangd = {},
-      gopls = {
-        settings = {
-          gopls = {
-            analyses = {
-              unusedparams = true,
-            },
-            staticcheck = true,
-          },
-        },
-      },
       -- pyright = {},
       -- rust_analyzer = {},
       -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -265,7 +262,6 @@ return { -- LSP Configuration & Plugins
     local ensure_installed = {}
     vim.list_extend(ensure_installed, {
       'stylua', -- Used to format Lua code
-      'csharpier',
       'rust_analyzer',
       'lua_ls',
       'isort',
@@ -273,6 +269,7 @@ return { -- LSP Configuration & Plugins
       'prettierd',
       'prettier',
       'lemminx',
+      'kotlin_lsp',
     })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 

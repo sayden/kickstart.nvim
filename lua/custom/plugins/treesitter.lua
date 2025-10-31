@@ -8,6 +8,8 @@ return { -- Highlight, edit, and navigate code
       'cpp',
       'html',
       'astro',
+      'markdown',
+      'markdown_inline',
       'templ',
       'lua',
       'luadoc',
@@ -37,12 +39,17 @@ return { -- Highlight, edit, and navigate code
     indent = { enable = true, disable = { 'ruby' } },
   },
   config = function(_, opts)
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+    -- vim.filetype.add { extension = { mdx = 'mdx' } }
 
     -- Prefer git instead of curl in order to improve connectivity in some environments
     require('nvim-treesitter.install').prefer_git = true
     ---@diagnostic disable-next-line: missing-fields
     require('nvim-treesitter.configs').setup(opts)
+
+    -- local ft_to_parser = require("nvim-treesitter.parsers").filetype_to_parsername
+    -- ft_to_parser.mdx = "markdown"
+
+    -- vim.treesitter.language.register('markdown', 'mdx')
 
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:

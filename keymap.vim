@@ -43,12 +43,16 @@ noremap <silent> e j
 noremap <silent> i l
 
 " " " U/E keys for 5 times u/e (faster navigation)
-noremap <silent> U 8k
-noremap <silent> E 8j
+noremap <silent> U 7k
+noremap <silent> E 7j
 
 " " " N key: go to the start/end of the line
 noremap <silent> N ^
 noremap <silent> I g_
+
+" Remap <C-d> to <C-e>
+noremap <C-e> 20j
+noremap <C-u> 20k
 
 " " set h (same as n, cursor left) to 'end of word'
 noremap h e

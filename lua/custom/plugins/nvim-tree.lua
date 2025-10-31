@@ -3,7 +3,7 @@ return {
   'nvim-tree/nvim-tree.lua',
   opts = {
     filters = {
-      custom = { 'node_modules', '.git/', '.cache', 'go.sum', '.import', '.uid', '_templ.go' },
+      custom = { 'node_modules', '.git/', '.cache', 'go.sum', '.import', '.uid' },
       dotfiles = false,
     },
     view = {
