@@ -7,6 +7,15 @@ return {
       incremental = false,
       autojump = true,
     },
+    label = {
+      before = true,
+      after = false,
+      reuse = 'none',
+      style = 'overlay',
+      rainbow = {
+        enabled = true,
+      },
+    },
     modes = {
       char = {
         keys = {},

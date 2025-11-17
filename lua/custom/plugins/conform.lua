@@ -1,4 +1,4 @@
--- Autoformat
+-- Formatter plugin
 return {
   'stevearc/conform.nvim',
   lazy = false,
